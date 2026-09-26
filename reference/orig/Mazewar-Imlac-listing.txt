@@ -1,0 +1,3971 @@
+		TITLE MAZE.3 GREG THOMPSON (GAT) 04/11/74
+		
+		;				     MAZE
+		
+		;       Maze  is  a  experiment  in  3  dimensional  graphics  and  intertask
+		;   teleconferencing.	 It is a hunt  and seek game that  can involve up to
+		;   eight Imlacs.   The Imlac user is  placed in a 16  by 32 square maze  and
+		;   attempts  to hunt down and destroy the other inhabitents of the maze (the
+		;   other Imlac  users) before  they do  the same  to him.   Each  player  is
+		;   represented by his uname (1 through 8 characters) as he moves through the
+		;   maze.   The  various keys that are  used to move through  the maze and to
+		;   fire are described below.
+		;
+		;      UP ARROW   - Move forward 1 square.
+		;      DOWN ARROW - Back up one square.
+		;      LEFT ARROW - Turn 90 degrees to the left.
+		;      RIGHT ARROW- Turn 90 degrees to the right.
+		;      FUNCTION 4 - Turn 180 degrees around.
+		;      PAGE XMIT  - Peek around the corner to the left.
+		;      XMIT	  - Peek around the corner to the right.
+		;      ESC	  - Fire.
+		;      CTRL -Z	  - Exit maze program.
+		;      FORM	  - Erase dispay buffer.
+		;      FUNCTION 7 - Look at maze from top.
+		;
+		;	The player enters the maze by typing MAZE<cr>; to monit or MAZE^k  to
+		;   DDT,  while at an imlac.   The  screen will be blank  for a minute or two
+		;   while the imlac side of the maze program is loaded after which the player
+		;   is placed in to the maze along with any other players.   A letter on  the
+		;   top of the screen indicates the direction you are currently facing.   The
+		;   unames of the other players are listed on the sides followed their  score
+		;   and  the number of times  they were shot.   Anytime a  player is shot the
+		;   bell will ring and  an '!' will  be placed next  to the shooting  players
+		;   score  and an '*' will be placed next to the number of times shot counter
+		;   of the player that was just shot.  Holding down the up or down arrow keys
+		;   will cause them to repeat.  After a shot is fired the player who is being
+		;   shot at has  two seconds  to get  out of view  of the  position that  the
+		;   shooting  player  was  at at  the  time  he fired  the  shot.   All other
+		;   characters typed are placed in a display buffer at the bottom of all  the
+		;   imlac's  screen.   Holding the Function-7 (or TAB as the case my be) will
+		;   allow you to view your position in the maze from the top.
+		;        The  3 buttons on the mouse and the 5 keyset buttons  may be used as
+		;   controls and have the following functions, starting from the left of  the
+		;   mouse;  peek  left,  fire,  peek  right,  turn  around,  turn  left, move
+		;   forward, turn right, and move backwards.
+		;        Users may specify their own mazes if they are the first player in  a
+		;   maze by giving a file name after 'maze to use: '.  Just a CR will default
+		;   to the standard maze.  User mazes must have a specific format if they are
+		;   to be able to work. They must begin with a LOC 10020 followed by the label
+		;   MAZE:  on  the first of  32.   octal words which  form a bit  map for the
+		;   maze.   The maze must  end with  LOC 17713, JMP @.+1, 101,  and an  END.
+		;   After assembling the maze must be imtraned by using the 'IMTRAN' command.
+		;   A  muddle function exists for printing out formated source mazes.   It is
+		;   initiated by  floading 'imlac;maze  print'  in  muddle and  then  issuing
+		;   <PRINT-MAZE  'input file spec' 'output file spec'>$ where the output file
+		;   spec defaults to the TTY.   An example of a formated source maze is given
+		;   below:
+		
+		;.INSRT IMSRC;IMDEFS >
+		;
+		;	   LOC   10020'
+		;
+		; MAZE:	   177777	   ; HERE IS THE 32 WORD MAZE.
+		;	   106401	   ; NO FOUR SQUARES MAY BE EMPTY.
+		;	   124675	   ; AND SHARE A COMMON CORNER.
+		;	   121205	   ; ALL OUTSIDE WALLS MUST BE FILLED IN.
+		;	   132055	   ; THIS IS THE DEFAULT MAZE.
+		;	   122741
+		;	   106415
+		;	   124161
+		;	   121405
+		;	   135775
+		;	   101005
+		;	   135365
+		;	   121205
+		;	   127261
+		;	   120205
+		;	   106765
+		;	   124405
+		;	   166575
+		;	   122005
+		;	   107735
+		;	   120001
+		;	   135575
+		;	   105005
+		;	   125365
+		;	   125225
+		;	   121265
+		;	   105005
+		;	   135375
+		;	   100201
+		;	   135675
+		;	   110041
+		;	   177777
+		;
+		;	   END	101'	; AUTO START BACK INTO CONSOLE PROGRAM
+		;
+		;   Players start in random loctions.
+		
+		;   The current default maze is:
+		;
+		;			      N O R T H
+		;
+		;
+		;	     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		;	     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		;	     $$$	 $$$$$$   $$$   		  $$$
+		;	     $$$	 $$$$$$   $$$   		  $$$
+		;	     $$$   $$$   $$$	  $$$$$$   $$$$$$$$$$$$   $$$
+		;	     $$$   $$$   $$$	  $$$$$$   $$$$$$$$$$$$   $$$
+		;	     $$$   $$$         $$$   $$$	    $$$   $$$
+		;	     $$$   $$$         $$$   $$$	    $$$   $$$
+		;	     $$$   $$$$$$   $$$ 	   $$$   $$$$$$   $$$
+		;	     $$$   $$$$$$   $$$ 	   $$$   $$$$$$   $$$
+		;	     $$$   $$$      $$$   $$$$$$$$$$$$  	  $$$
+		;	     $$$   $$$      $$$   $$$$$$$$$$$$  	  $$$
+		;	     $$$	 $$$$$$   $$$   	 $$$$$$   $$$
+		;	     $$$	 $$$$$$   $$$   	 $$$$$$   $$$
+		;	     $$$   $$$   $$$		$$$$$$$$$	  $$$
+		;	     $$$   $$$   $$$		$$$$$$$$$	  $$$
+		;	     $$$   $$$         $$$$$$   	    $$$   $$$
+		;	     $$$   $$$         $$$$$$   	    $$$   $$$
+		;	     $$$   $$$$$$$$$   $$$$$$$$$$$$$$$$$$$$$$$$   $$$
+		;	     $$$   $$$$$$$$$   $$$$$$$$$$$$$$$$$$$$$$$$   $$$
+		;	     $$$	       $$$		    $$$   $$$
+		;	     $$$	       $$$		    $$$   $$$
+		;	     $$$   $$$$$$$$$   $$$   $$$$$$$$$$$$   $$$   $$$
+		;	     $$$   $$$$$$$$$   $$$   $$$$$$$$$$$$   $$$   $$$
+		;	     $$$   $$$         $$$   $$$	    $$$   $$$
+		;	     $$$   $$$         $$$   $$$	    $$$   $$$
+		; 	W    $$$   $$$   $$$$$$$$$   $$$   $$$$$$	  $$$     E
+		;	     $$$   $$$   $$$$$$$$$   $$$   $$$$$$	  $$$
+		;	E    $$$   $$$  	     $$$	    $$$   $$$     A
+		;	     $$$   $$$  	     $$$	    $$$   $$$
+		;	S    $$$	 $$$$$$   $$$$$$$$$$$$$$$   $$$   $$$     S
+		;	     $$$	 $$$$$$   $$$$$$$$$$$$$$$   $$$   $$$
+		;	T    $$$   $$$   $$$	  $$$   	    $$$   $$$     T
+		;	     $$$   $$$   $$$	  $$$   	    $$$   $$$
+		;	     $$$$$$$$$   $$$$$$   $$$   $$$$$$$$$$$$$$$   $$$
+		;	     $$$$$$$$$   $$$$$$   $$$   $$$$$$$$$$$$$$$   $$$
+		;	     $$$   $$$      $$$ 		    $$$   $$$
+		;	     $$$   $$$      $$$ 		    $$$   $$$
+		;	     $$$	 $$$$$$$$$$$$$$$$$$   $$$$$$$$$   $$$
+		;	     $$$	 $$$$$$$$$$$$$$$$$$   $$$$$$$$$   $$$
+		;	     $$$   $$$  				  $$$
+		;	     $$$   $$$  				  $$$
+		;	     $$$   $$$$$$$$$   $$$$$$   $$$$$$$$$$$$$$$   $$$
+		;	     $$$   $$$$$$$$$   $$$$$$   $$$$$$$$$$$$$$$   $$$
+		;	     $$$	 $$$   $$$		    $$$   $$$
+		;	     $$$	 $$$   $$$		    $$$   $$$
+		;	     $$$   $$$   $$$   $$$   $$$$$$$$$$$$   $$$   $$$
+		;	     $$$   $$$   $$$   $$$   $$$$$$$$$$$$   $$$   $$$
+		;	     $$$   $$$   $$$   $$$   $$$      $$$   $$$   $$$
+		;	     $$$   $$$   $$$   $$$   $$$      $$$   $$$   $$$
+		;	     $$$   $$$         $$$   $$$   $$$$$$   $$$   $$$
+		;	     $$$   $$$         $$$   $$$   $$$$$$   $$$   $$$
+		;	     $$$	 $$$   $$$		    $$$   $$$
+		;	     $$$	 $$$   $$$		    $$$   $$$
+		;	     $$$   $$$$$$$$$   $$$   $$$$$$$$$$$$$$$$$$   $$$
+		;	     $$$   $$$$$$$$$   $$$   $$$$$$$$$$$$$$$$$$   $$$
+		;	     $$$		     $$$		  $$$
+		;	     $$$		     $$$		  $$$
+		;	     $$$   $$$$$$$$$   $$$$$$$$$   $$$$$$$$$$$$   $$$
+		;	     $$$   $$$$$$$$$   $$$$$$$$$   $$$$$$$$$$$$   $$$
+		;	     $$$      $$$		   $$$  	  $$$
+		;	     $$$      $$$		   $$$  	  $$$
+		;	     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		;	     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+		;
+		;
+		;			       S O U T H
+		;
+		
+		; MAZE PROTOCOL:	MESSAGES ARE SENT TO ALL OTHER IMLACS
+		;			DO NOT SEND TO ORIGINATING IMLAC
+		;
+		; 001 -- PLAYER LEAVES GAME
+		;  <ID>
+		;
+		; 002 -- PLAYER MOVED
+		;  <ID>
+		;  <NEW DIRECTION  WITH 100 BIT ON>
+		;  <NEW XLOC WITH 100 BIT ON>
+		;  <NEW YLOC WITH 100 BIT ON>
+		;
+		; 003 -- PLAYER DIED
+		;  <ID>
+		;  <ID OF WHO DIED>
+		;
+		; 004 -- ANNOUNCE NEW PLAYER
+		;  <ID # OF NEW PLAYER>
+		;  <6 CHARS OF ID NAME>
+		;  <2 CHAR # OF HITS WITH 100 BIT ON>  (HIGH ORDER 6 BITS THEN LOW ORDER 6 BITS)
+		;  <2 CHAR # OF DEATHS WITH 100 BIT ON>
+		;
+		; 014 -- ERASE DISPLAY RING BUFFER
+		;
+		;
+		; IDS MUST BE >= 1 AND <= 8.
+		;
+		; ALL INCOMING MESSAGES ARE CHECKED FOR LEGALITY.  BAD MESSAGES ARE FLUSHED.
+		; A NUMBER IN THE STATUS LINE INDICATES THE NUMBER OF BAD MESSAGES RECIEVED.
+		; INFORMATION CONCERNING THE LAST BAD MESSAGE RECIEVED IS SAVED FOR LATER EVALUATION.
+		;
+		; ALL CHARACTERS SUBROUTINES AND THE DJMS TABLE IS UP IN THE CONSOLE PROGRAM (SSV).
+		; THE DJMS TABLE IS ACCESSED THROUGH LOCATION 24 OCTAL WHICH STARTS WITH THE ENTRY
+		; FOR OCTAL CODE 40 (SPACE).
+		;
+		; ANY CHARACTERS TYPED ON CONSOLE (>014') ARE SENT TO PDP-10 AND SHOULD
+		; BE ECHOED TO ALL! CONSOLES INCLUDING THE ORIGINATOR.
+		;
+		; ANY OTHER CHARACTERS RECEIVED BY IMLAC ARE DISPLAYED IN A
+		; RING BUFFER AT THE BOTTOM OF THE PICTURE.
+		;
+		; THE FIRST ANNOUNCE NEW PLAYER MESSAGE THE IMLAC RECIEVES DEFINES ITS ID.
+		;
+		; THIS VERSION REQUIRES A GRAPHICS IMLAC WITH LONG VECTOR HARDWARE
+		; MULTI-LEVEL SUBROUTINING, AND 8K DISPLAY ADDRESSING MOD.
+		;
+		; THE MESSAGE SWITCHING PROGRAM ON THE 10 MUST ALSO KEEP TRACK
+		; OF THE CURRENT SCORES OF ALL THE PLAYERS SO WHEN A NEW PLAYER
+		; JOINS INTO A ALREADY EXISTING GAME HE MAY RECIEVE THE CURRECT
+		; SCORES OF ALL THE PLAYERS.
+		;
+		; WHEN AN IMLAC WANTS TO JOIN AN EXISTING MAZE THE FOLLOWING OCCURS:
+		;	1) THE MAZE PROGRAM IS LOADED INTO HIS IMLAC.
+		;	2) THE CURRENT MAZE IS LOADED ON TOP OF THE DEFAULT MAZE
+		;	   IF THE DEFAULT MAZE IS NOT BEING USED.
+		;	3) A TYPE 4 MESSAGE IS SENT TO ALL IMLACS ANOUNCING THE
+		;	   NEW IMLAC.  THE NEW IMLAC GETS HIS ID FROM THIS MESSAGE.
+		;	4) TYPE 4 MESSAGES FOR ALL THE OTHER PLAYERS ARE SENT TO
+		;	   THE NEW IMLAC.
+		;
+		; WRITTEN BY:
+		;
+		; HOWARD PALMER		STANFORD	ORIGINAL IDEA & STAND-ALONE VERSION OF MAZE
+		; STEVE COLLEY 		CAL TECH	ORIGINAL IDEA OF MAZE, STAND-ALONE MAZE
+		;					& CRUDE MULTIPLE PLAYERS
+		; GREG THOMPSON		M.I.T.		FULL MULTIPLE PLAYERS ADDITIONS
+		; DAVE LEBLING		M.I.T.		PDP-10 MESSAGE SWITCHER AND ROBOTS
+		; KEN HARRENSTEIN	M.I.T.		PDP-10 part of fast interaction protocol
+		; CHARLES FRANKSTON	M.I.T.		IMLAC part of fast interaction protocol.
+		
+		; actual program begins here
+		
+00000	000000	.INSRT IMSRC;IMDEFS >
+					; To keep midas from barfing 'RES' at use of these syms in prg.
+00001	000000	IF1 EXPUNGE FIX,MOVE,PTR,EXP
+		
+00002	005261	FAST==1			; to assemble fast-protocol version.
+00003	005262	CHEAT==0		; conditional to assemble cheater stuff
+		
+00004	000004	.MLLIT==1
+		
+			LOC	10000'
+		
+00000	000000	.ADDR.=1	; 8k addressing for display opcodes
+		
+00001	010000		JMP	START		; starting point
+00002	010000		JMP	RESTART		; restarting entry point
+00003	010000		JMP	LEAVE		; entry to return to ssv (on error)
+00004	010000		JMP	RETN		; reenter maze main loop
+		
+					; auto increment register definitions 
+00005	005263	DPTR=10'		; index loc 10 used as pointer
+00006	005264	VISPT=11'
+00007	005265	VISPT2=12'
+00010	005266	VISPT3=13'
+00011	005267	VISPT4=14'
+00012	005270	VISPT5=15'
+					; index location 16' and 17' used by interupt routine
+		
+			LOC	10020'
+		
+		; here is the 32 word maze:  no four squares may be empty and share a
+		; common corner, and all outside walls must be filled in
+		
+00020	177777	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00021	106401	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00022	124675	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00023	121205	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00024	132055	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00025	122741	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00026	106415	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00027	124161	MAZE:	177777 ? 106401 ? 124675 ? 121205 ? 132055 ? 122741 ? 106415 ? 124161
+00030	000000		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00031	135775		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00032	101005		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00033	135365		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00034	121205		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00035	127261		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00036	120205		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00037	121405		121405 ? 135775 ? 101005 ? 135365 ? 121205 ? 127261 ? 120205 ? 106765
+00040	000000		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00041	166575		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00042	122005		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00043	107735		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00044	120001		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00045	135575		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00046	105005		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00047	124405		124405 ? 166575 ? 122005 ? 107735 ? 120001 ? 135575 ? 105005 ? 125365
+00050	000000		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+00051	121265		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+00052	105005		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+00053	135375		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+00054	100201		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+00055	135675		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+00056	110041		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+00057	125225		125225 ? 121265 ? 105005 ? 135375 ? 100201 ? 135675 ? 110041 ? 177777
+		
+		
+		; here to wait for the loader signal
+		
+00060	002040	LOADER:	RSF
+00061	010060		 JMP .-1
+00062	100001		CLA
+00063	001033		RRC
+00064	045271		AND [177]
+00065	074000		SAM [^A]
+00066	010000		 JMP LOADER
+00067	002040		RSF
+00070	010067		 JMP .-1
+00071	100001		CLA
+00072	001033		RRC
+00073	045271		AND [177]
+00074	074000		SAM [^A]
+00075	010000		 JMP LOADER
+00076	111272		JMP @[40]
+		
+		;	dstat, dx, dy, dir	is my position and point into info table
+		
+00077	000000	DSTAT:	0			; status flag
+00100	000000	DX:	0				; x position of this imlac
+00101	000000	DY:	0				; y position of this imlac
+						; start out big so we won't show up on map
+00102	000000	DIR:	0				; direction he is pointing
+						; bits 14 and 15 have meaning
+						;  bit 14,bit 15
+						;	0 0  north
+						;	0 1  east
+						;	1 0  south
+						;	1 1  west
+		
+00103	000000	NEXTBIT:0	
+00104	000000	ETEM:	0	
+00105	000000	WPTR:	0	
+00106	000000	WPTR2:	0
+00107	000000	CNT:	0			; counters
+00110	000000	CNT2:	0	
+00111	000000	KILL:	0			; last player killed by this imlac
+00112	000000	PTR4:	0			; pointers
+00113	000000	PTR3:	0
+00114	000000	PTR2:	0
+00115	000000	PTR:	0	
+00116	000000	XDELTA:	0	
+00117	000000	YDELTA:	0	
+00120	000000	BEAMBIT:0	
+00121	000000	LASTRIG:0	
+00122	000000	LASTLEF:0	
+00123	000000	HALLNGTH:0	
+00124	000000	MYREAL:	0			; the real id of this imlac
+00125	000000	MYBIT:	0			; the id of this imlac
+00126	000000	MYBIT1:	0			; mybit-1 (normalize to 0-7)
+00127	000000	IID:	0			; temporary imlac id used for see routine
+00130	000000	MPTR:	0	
+00131	000000	BIT:	0	
+		
+				; keyboard and keyset input data
+		
+00132	000000	KEY:	0			; last key read in
+00133	000000	KEYSET:	0			; last value from keyset
+00134	000000	KSCNT:	0			; keyset repeat counter
+		
+00135	001372	HOME:	1372'			; ctrl z	[exits program]
+00136	000204	BACKUP:	204'			; down arrow	(backup one square)
+00137	000205	RTURN:	205'			; right arrow	(turn 90 degrees right)
+00140	000206	MOVE:	206'			; up arrow	(move forward one square)
+00141	000210	LTURN:	210'			; left arrow	(turn 90 degrees left)
+00142	000234	TURNA:	234'			; function 4	(turn 180 degrees around)
+00143	000202	PEEKR:	202'			; xmit	(peek to the right)
+00144	000233	FIRE:	233'			; esc	(fire)
+00145	000216	PEEKL:	216'			; page xmit	(peek to the left)
+00146	000214	ERING:	214'			; form	(erase ring buffer)
+00147	000211	TOPVW:	211'			; tab	(get a top view of maze)
+		
+00150	000000	TEM1:	0			; temporarys
+00151	000000	TEM2:	0
+00152	000000	TEM3:	0
+		
+00153	000001	TOPSW:	-1			; indicates whether a top or inside view
+		
+00154	000000	IFN FAST,[
+00155	000000	RELCNT:	0			;counter of rel positions between abs
+00156	000000	]
+		
+		;	start of game
+		
+00157	001161	START:	IOF			; disable any interupts
+00160	100001		CLA
+00161	020000		DAC	ICNT		; set no message pending
+00162	020000		DAC	MYBIT		; indicate we have no id
+00163	000000		MSW			; set initial keyset value
+00164	020000		DAC	KEYSET
+00165	061273		LAC	[7776']		; limit ssv's display list
+00166	121274		DAC	@[25']
+00167	034000		JMS	ERASE		; reset ring buffer
+00170	060000		LAC	[MESAGE-1]	; set up you were shot message
+00171	020011		DAC	11'
+00172	060000		LAC	[YWSB-1]
+00173	020012		DAC	12'
+00174	104021		LWC	17.
+00175	020000		DAC	CNT2
+00176	160012	SETUPN:	LAC	@12'
+00177	034000		JMS	GETCHR
+00200	120011		DAC	@11'
+00201	030000		ISZ	CNT2
+00202	010000		JMP	SETUPN
+		;
+		;	now wait for our id
+		;
+00203	034000		JMS	CHARIN
+00204	060000		LAC	MYBIT		; wait for identifier message to come in
+00205	102001		ASN			; has it been set yet?
+00206	010203		 JMP	.-3		; no, keep waiting
+00207	100003		STA
+00210	020000		DAC	TOPSW		; display top view
+		;
+		;	place player in maze
+		;
+00211	000000	RESTART:KCF			; reset keyboard
+00212	034000	RESET1:	JMS	RANDOM
+00213	045275		AND	[17']
+00214	120000		DAC	@DX
+00215	034000		JMS	RANDOM
+00216	045276		AND	[37']
+00217	120000		DAC	@DY
+00220	034000		JMS	PNTBIT
+00221	160000		LAC	@MPTR
+00222	044000		AND	BIT
+00223	002001		ASZ
+00224	010000		 JMP	RESET1
+00225	034000		JMS	RANDOM
+00226	045277		AND	[3]
+00227	120000		DAC	@DIR
+00230	060000		LAC	[AD1]		; reset to main screen
+00231	020000		DAC	WHICHD
+00232	000000	IFN FAST,[
+00233	100001		CLA
+00234	020000		DAC	RELCNT		; force abs. position out first thing.
+00235	000000	]
+00236	010000		JMP	RETN4
+		
+00237	100001	RETN2:	CLA			; look from inside maze
+00240	020000		DAC	TOPSW
+		;
+		;	send new position to 10
+		;
+00241	100003	RETN4:	STA			; set to playing status
+00242	120000		DAC	@DSTAT
+00243	034000		JMS	PRINT		; build current display
+00244	000000	IFE FAST,[
+00245	034000		JMS	ABSMSG		; send out absolute position
+00246	010000		JMP	RETN
+00247	000000	]
+00250	000000	IFN	FAST,[
+00251	060000		LAC	RELCNT
+00252	102002		ASM			; if ge 0, something wants an abs pos sent out.
+00253	034000		 JMS	ABSMSG		; sigh, send absolute
+00254	010000		JMP	RETN		; and continue
+		
+00255	000000	RELMSG:	0
+00256	050000		IOR MYBIT1
+00257	034000		JMS SEND1
+00260	030000		ISZ RELCNT
+00261	100000		 NOP
+00262	110000		JMP @RELMSG
+		
+00263	000000	] ;end of ifn fast
+		
+		; send new absolute position
+00264	000000	ABSMSG:	0
+00265	000000	IFN FAST,[
+00266	104020		LWC	20		;number of rel messages before an abs
+00267	020000		DAC	RELCNT		;set counter
+00270	000000	]
+00271	004002		LAW	2			; send moved message code
+00272	034000		JMS	SEND1
+00273	060000		LAC	MYBIT		; send my id
+00274	034000		JMS	SEND1
+00275	160000		LAC	@DIR		; send new direction
+00276	045277		AND	[3]		; send only lower 2 bits!
+00277	051300		IOR	[100']
+00300	034000		JMS	SEND1
+00301	160000		LAC	@DX		; send new x location
+00302	051300		IOR	[100']
+00303	034000		JMS	SEND1
+00304	160000		LAC	@DY		; send new y location
+00305	051300		IOR	[100']
+00306	034000		JMS	SEND1
+00307	110000		JMP	@ABSMSG		;return
+		
+		;
+		;	main loop
+		;
+00310	034000	RETN:	JMS	CHARIN		; get stuff from ten
+00311	034000		JMS	DISP		; maintain display
+00312	002020	RETN3:	KSF			; no, is there a key down?
+00313	010000		 JMP	KSCHK		; no, now check keyset
+00314	100011		CAL			; yes, read the key
+00315	001023		KRC
+00316	020000		DAC	KEY
+00317	104010		LWC	8.		; set up to rept key (time before start repeating)
+00320	020000		DAC	REPTCNT
+00321	060000	REPT:	LAC	KEY
+00322	000000	KEYREPT:SAM	HOME		; is it ctrl-z?
+00323	010000		 JMP	KEYCHK
+00324	060000		LAC	MYBIT		; remove me from maze
+00325	020000		DAC	ININFO
+00326	010000		JMP	GONER
+		;
+		;	check keyset
+		;
+00327	100001	KSCHK:	CLA
+00330	000000		MSW
+00331	074000		SAM	KEYSET		; has it changed?
+00332	010334		 JMP	.+2		; yes, so do something about it
+00333	010000		  JMP	RETN		; no, re-enter main loop
+00334	020000		DAC	KEYSET		; save new value
+00335	104017		LWC	15.		; set up to repeat
+00336	020000		DAC	KSCNT
+00337	060000	KSREPT:	LAC	[BACKUP]		; now figure which key to simulate
+00340	020000		DAC	PTR
+00341	060000		LAC	KEYSET
+00342	051301		IOR	[174340']		; turn on bits to ignore
+00343	000000		CMA\CLL
+00344	102001		ASN
+00345	010000		 JMP	RETN
+00346	003021		RAR	1
+00347	002004		LSZ
+00350	010000		 JMP	GOTIT
+00351	024000		XAM	PTR
+00352	100004		IAC
+00353	024000		XAM	PTR
+00354	010346		JMP	.-6
+		
+00355	160000	GOTIT:	LAC	@PTR		; get appropriate key
+00356	020000		DAC	KEY
+00357	010000		JMP	KEYREPT
+		;
+		;	see if we are blowing up
+		;
+00360	060000	KEYCHK:	LAC	BIGEXP		; if so then ignore keys
+00361	002001		ASZ
+00362	010000		 JMP	RETN		; yes, so wait it out
+		;
+		;	check for various keyboard commands
+		;
+00363	060000	KEY1:	LAC	KEY
+00364	074000		SAM	RTURN		; turn right?
+00365	010000		 JMP	KEY2
+00366	130000		ISZ	@DIR
+00367	100000		 NOP
+00370	000000	IFN FAST,[
+00371	061302		LAC	[20']		; new protocol for right turn
+00372	034000		JMS	RELMSG
+00373	000000	]
+00374	010000		JMP	RETN2
+		
+00375	074000	KEY2:	SAM	LTURN		; left turn?
+00376	010000		 JMP	KEY3
+00377	160000		LAC	@DIR
+00400	071261		SUB	[1]
+00401	120000		DAC	@DIR
+00402	000000	IFN FAST,[
+00403	061303		LAC	[30']		; new protocol for left turn
+00404	034000		JMS	RELMSG
+00405	000000	]
+00406	010000		JMP	RETN2
+		
+00407	074000	KEY3:	SAM	MOVE		; move forward?
+00410	010000		 JMP	KEY4
+00411	034000		JMS	MOVER
+00412	010000		JMP	RETN
+00413	000000	IFN FAST,[
+00414	061304		LAC	[150']		; new protocol for move forward
+00415	034000		JMS	RELMSG
+00416	000000	]
+00417	010000		JMP	RETN2
+		
+00420	074000	KEY4:	SAM	PEEKL		; peek left?
+00421	010000		 JMP	KEY5
+00422	034000		JMS	MOVER
+00423	010000		JMP	RETN
+		;ifn fast,[
+		;	lac	[150']		; new protocol for move forward
+		;	ior	mybit1		; insert id
+		;	jms send1
+		;]
+00424	160000		LAC	@DIR
+00425	071261		SUB	[1]
+00426	120000		DAC	@DIR
+00427	034000		JMS	HOLD
+00430	160000		LAC	@DIR
+00431	071261		SUB	[1]
+00432	120000		DAC	@DIR
+00433	034000	PEEKER:	JMS	MOVER
+00434	010000		JMP	RETN
+00435	034000		JMS	ADIR2
+00436	010000		JMP	RETN2
+		
+00437	074000	KEY5:	SAM	PEEKR		; peek right?
+00440	010000		 JMP	KEY6
+00441	034000		JMS	MOVER
+00442	010000		JMP	RETN
+00443	130000		ISZ	@DIR
+00444	100000		 NOP
+00445	034000		JMS	HOLD
+00446	130000		ISZ	@DIR
+00447	100000		 NOP
+00450	010000		JMP	PEEKER
+		
+00451	074000	KEY6:	SAM	TURNA		; turn around?
+00452	010000		 JMP	KEY7
+00453	034000		JMS	ADIR2
+00454	000000	IFN FAST,[
+00455	061305		LAC	[140']		; new protocol for turn-around
+00456	034000		JMS	RELMSG
+00457	000000	]
+00460	010000		JMP	RETN2
+		
+00461	074000	KEY7:	SAM	BACKUP		; back up?
+00462	010000		 JMP	KEY8
+00463	034000		JMS	ADIR2
+00464	034000		JMS	MOVER
+00465	010000		JMP	KEY7NP
+00466	034000		JMS	ADIR2
+00467	000000	IFN FAST,[
+00470	061306		LAC	[160']		; new protocol for move backwards.
+00471	034000		JMS RELMSG
+00472	000000	]
+00473	010000		JMP	RETN2
+		
+00474	034000	KEY7NP:	JMS	ADIR2		; can't move backwards, restore direction.
+00475	010000		JMP	RETN
+		
+00476	000000	ADIR2:	0
+00477	160000		LAC	@DIR
+00500	065307		ADD	[2]
+00501	120000		DAC	@DIR
+00502	110000		JMP	@ADIR2
+		
+00503	074000	KEY8:	SAM	FIRE		; fire?
+00504	010000		 JMP	KEY9
+		;
+		;	look for visible opponent to shoot at
+		;
+00505	060000		LAC	[THING+4]		; set display list pointer
+00506	020000		DAC	PTR
+00507	104010		LWC	8.		; 8 possible imlacs
+00510	020000		DAC	CNT2
+00511	060000		LAC	[IM1+4]		; set info table pointer
+00512	020006		DAC	VISPT
+00513	100004		IAC
+00514	020000		DAC	PTR2
+00515	100000	CHKNEXT:LAC	@PTR		; get display body
+00516	074000		SAM	[DNOP]		; is he visible?
+00517	010000		 JMP	NOTDNOP
+00520	060006	NOTHIM:	LAC	VISPT		; no, bump pointers to next player
+00521	065266		ADD	[11.]
+00522	000006	BUMPTRS:DAC	VISPT
+00523	100004		IAC
+00524	020000		DAC	PTR2
+00525	060000		LAC	PTR
+00526	065310		ADD	[6]
+00527	020000		DAC	PTR
+00530	030000		ISZ	CNT2		; did we check them all
+00531	010000		 JMP	CHKNEXT		; no
+00532	010000		JMP	RETN		; yes, return
+		
+00533	000000	NOTDNOP:SAM	JMSEXP		; could he already be exploding?
+00534	010000		 JMP	FOUNONE		; no, so we found a opponent to shoot at
+00535	010000		JMP	NOTHIM		; yes, so don't fire at him
+00536	100000	FOUNONE:LAC	@PTR2		; are we already firing on this guy?
+00537	002001		ASZ			; if so then don't fire again
+00540	010000		 JMP	NOTHIM
+00541	104120		LWC	80.		; set 2 second delay to allow player to dodge it
+00542	120006		DAC	@VISPT
+00543	160000		LAC	@DIR
+00544	120006		DAC	@VISPT
+00545	160000		LAC	@DX		; save our location
+00546	120006		DAC	@VISPT
+00547	160000		LAC	@DY
+00550	120006		DAC	@VISPT
+00551	060006		LAC	VISPT		; now check next player
+00552	065311		ADD	[7]
+00553	010000		JMP	BUMPTRS
+		;
+		;	does he want screen erased?
+		;
+00554	074000	KEY9:	SAM	ERING
+00555	010000		 JMP	VIEWTOP		; no
+00556	034000		JMS	ERASE		; yes, so erase it
+00557	010000		JMP	RETN		; then return to main loop
+		;
+		;	look at maze from top
+		;
+00560	000000	VIEWTOP:SAM	TOPVW		; look at maze from top?
+00561	010000	IFE CHEAT,	JMP SENDIT
+00562	010000	IFN CHEAT,	JMP CHNGP
+00563	100003		STA			; yes, set flag for top view
+00564	020000		DAC	TOPSW
+00565	034000		JMS	PRINT		; and build display
+00566	034000	VTWAIT:	JMS	CHARIN
+00567	034000		JMS	DISP
+00570	100011		CAL
+00571	001021		KRB
+00572	074000		SAM	TOPVW		; display top view as long 
+00573	010575		 JMP	.+2		; as key is held down
+00574	010000		  JMP	VTWAIT
+00575	100001		CLA			; look inside again
+00576	020000		DAC	TOPSW
+00577	034000		JMS	PRINT
+00600	010000		JMP	RETN
+		
+00601	000000	IFN CHEAT,[
+		;
+		;	secret id switching keys
+		;
+		;	ctrl-rept 0 to :
+		;	0	return to original id
+		;	n	changes to id n
+		;	:	complement forward square
+		;
+00602	071312	CHNGP:	SUB	[3260']
+00603	002002		ASP
+00604	010000		 JMP	SENDIT
+00605	075265		SAM	[10.]		; ctrl-rept : ?
+00606	010610		 JMP	.+2		; no
+00607	010000		  JMP	ZAP		; yes
+00610	102001		ASN			; ctrl-repeat 0?
+00611	060000		LAC	MYREAL		; if so get my real id
+00612	071264		SUB	[9.]
+00613	102002		ASM
+00614	010000		 JMP	RETN
+00615	065264		ADD	[9.]
+00616	020000		DAC	TEM1
+00617	003043		SAL	3
+00620	064000		ADD	[IML1-8.]		; see if this player is playing
+00621	020000		DAC	TEM2		; by seeing if his name exists
+00622	060000		LAC	[DJMS D040,]
+00623	174000		SAM	@TEM2
+00624	010626		 JMP	.+2
+00625	010000		  JMP	RETN
+00626	060000		LAC	TEM1
+00627	034000		JMS	GETD		; change us to new id
+00630	034000		JMS	PRINT		; display new view
+00631	010000		JMP	RETN
+		
+00632	034000	ZAP:	JMS	MOV		; set up ptrs to next square
+00633	160000		LAC	@MPTR		; now flip bit
+00634	054000		XOR	BIT
+00635	120000		DAC	@MPTR
+00636	034000		JMS	PRINT		; rebuild display
+00637	010000		JMP	RETN
+00640	000000	] ;end of ifn cheat.
+		
+		;
+		;	send other characters to 10
+		;
+00641	000000	SENDIT:
+00642	065312	IFN CHEAT,	ADD	[3260']
+00643	045271		AND	[177']
+00644	075270		SAM	[15']		; cr?
+00645	010647		 JMP	.+2
+00646	010000		  JMP	SENDOK
+00647	071272		SUB	[40']		; control code?
+00650	002002		ASP
+00651	010000		 JMP	RETN		; yes, so ignore it
+00652	071300		SUB [100']		;it's a 40-177 char, see if it's 140-177
+00653	002002		ASP
+00654	065272		ADD [40']		;no, it's 40-137, get char back.
+00655	065300		ADD [100']		;yes, 140-177.	make it uppercase.
+			
+00656	034000	SENDOK:	JMS	SEND1		; now send it to 10. char is either 40-137 or 15.
+00657	010000		JMP	RETN
+		;
+		;	hold a position for as long as the same key is held down
+		;
+00660	000000	HOLD:	0	
+00661	034000		JMS	PRINT		; update display
+00662	034000	HOLD1:	JMS	CHARIN		; get stuff from ten
+00663	034000		JMS	DISP		; maintain display
+00664	100011		CAL
+00665	001021		KRB
+00666	074000		SAM	KEY		; is the same key down?
+00667	010671		 JMP	.+2		; no, test key set for key still down
+00670	010000		  JMP	HOLD1		; yes, hold this location
+00671	100001	TSTKS:	CLA
+00672	000000		MSW
+00673	102001		ASN			; do we have the hardware?
+00674	110000		 JMP	@HOLD		; no, just return
+00675	045313		AND	[2400']		; if either peek left or right still
+00676	055313		XOR	[2400']
+00677	002001		ASZ			; down then hold position
+00700	010000		 JMP	HOLD1
+00701	110000		JMP	@HOLD		; return
+		
+		;
+		;	point mptr to appropriate word maze (y)
+		;	and bit to appropriate bit in word for our
+		;	current location
+		;
+00702	000000	PNTBIT:	0	
+00703	060000		LAC	[MAZE]
+00704	164000		ADD	@DY
+00705	020000		DAC	MPTR
+00706	160000		LAC	@DX
+00707	002001		ASZ
+00710	010000		 JMP	PNT1
+00711	061314		LAC	[100000']
+00712	010000		JMP	PNT2
+		
+00713	100006	PNT1:	CIA
+00714	020000		DAC	CNT
+00715	100010		CLL
+00716	061314		LAC	[100000']
+00717	003021		RAR	1
+00720	030000		ISZ	CNT
+00721	010717		 JMP	.-2
+00722	020000	PNT2:	DAC	BIT
+00723	110000		JMP	@PNTBIT
+		;
+		;	move forward one square
+		;
+00724	000000	MOV:	0	
+00725	100001		CLA			; clear out increments
+00726	020000		DAC	TEM1		; y increment
+00727	020000		DAC	TEM2		; x increment
+00730	034000		JMS	PNTBIT		; position to current position
+00731	160000		LAC	@DIR		; see which direction we are heading
+00732	045261		AND	[1]
+00733	002001		ASZ
+00734	010000		 JMP	MOVEWE
+00735	034000		JMS	CREMENT		; move north or south
+00736	020000		DAC	TEM1
+00737	064000		ADD	MPTR
+00740	020000		DAC	MPTR
+00741	110000		JMP	@MOV		; return
+		
+00742	034000	MOVEWE:	JMS	CREMENT		; move west or east
+00743	045302		AND	[20']
+00744	050001		IOR	[RAL 1]
+00745	020000		DAC	NOPER
+00746	060000		LAC	BIT
+00747	100010		CLL
+00750	100000	NOPER:	NOP
+00751	020000		DAC	BIT
+00752	034000		JMS	CREMENT
+00753	100006		CIA
+00754	020000		DAC	TEM2		; set x increment
+00755	110000		JMP	@MOV
+		
+00756	000000	MOVER:	0
+00757	034000		JMS	MOV		; move forwards one square 
+00760	160000		LAC	@MPTR		; see if it is a wall
+00761	044000		AND	BIT
+00762	002001		ASZ
+00763	110000		 JMP	@MOVER		; a open square
+00764	060000		LAC	TEM2		; update x to this square
+00765	164000		ADD	@DX
+00766	120000		DAC	@DX
+00767	060000		LAC	TEM1		; update y
+00770	164000		ADD	@DY
+00771	120000		DAC	@DY
+00772	030000		ISZ	MOVER		; and indicate we moved by skipping
+00773	110000		JMP	@MOVER
+		;
+		;	return 1 or -1 according to which direction we are heading
+		;
+00774	000000	CREMENT:	0	
+00775	160000		LAC	@DIR
+00776	003061		SAR	1
+00777	045261		AND	[1]
+01000	102001		ASN
+01001	060001		 LAC	[-1]
+01002	110000		JMP	@CREMENT
+		
+		;
+		;	refreshing routine
+		;
+01003	000000	REFR:	0	
+01004	002010		DSF
+01005	002200		 SSF
+01006	110000		  JMP	@REFR
+01007	001071		SCF
+01010	060000		LAC	WHICHD		; get appropriate display list address
+01011	001003		DLA
+01012	003100		DON
+01013	100003		STA			; indicate 40 cycle sync
+01014	020000		DAC	SYNC
+01015	110000		JMP	@REFR
+		
+01016	000000	WHICHD:	AD1			; contains address of current display
+01017	000000	SYNC:	0			; 40 cycle sync flag
+01020	000000	BIGEXP:	0			; our explosion counter
+01021	051031	JMSEXP:	DJMS	EXPLOSIN
+		
+01022	004020	EXP:	DDSP
+01023	004020		DDSP
+01024	004020		DDSP
+01025	004020	INC1:	DDSP
+01026	004020	INC2:	DDSP
+01027	004020	INC3:	DDSP
+01030	004040		DRJM
+		
+01031	001000	EXPLOSIN:DLXA 1000
+01032	050000		DJMS	WAIT
+01033	004007		DSTS	3
+01034	030203		INC	E,D03
+01035	101500		INC	D03,100'
+01036	050000		DJMS	EXP
+01037	030200		INC	E,D00
+01040	100200	INC4:	INC	D00,D00
+01041	040100		INC	100',100'
+01042	050000		DJMS	EXP
+01043	030200		INC	E,D00
+01044	100200	INC5:	INC	D00,D00
+01045	100200	INC6:	INC	D00,D00
+01046	040100		INC	100',100'
+01047	060000		DJMP	EXP
+		;
+		;	keep display and timed occurances running
+		;
+01050	000000	DISP:	0
+01051	034000		JMS	REFR		; keep up display
+01052	060000		LAC	SYNC		; has the 40 cycle sync occured yet?
+01053	102002		ASM
+01054	110000		 JMP	@DISP		; no, just return
+01055	100001		CLA			; yes, reset it
+01056	020000		DAC	SYNC
+		;
+		;	check for our blowing up
+		;
+01057	060000		LAC	BIGEXP		; are we blowing up?
+01060	102001		ASN
+01061	010000		 JMP	CHKOPP		; no
+01062	030000		ISZ	BIGEXP		; is it finshed?
+01063	010000		 JMP	UPDTBIG		; no, update it
+01064	010000		JMP	RESTART		; yes, now restart the imlac
+		;
+		;	update 4 pointers
+		;
+01065	000000	BUMPPTS:0
+01066	060007		LAC	VISPT2
+01067	065315		ADD	[5]
+01070	020007		DAC	VISPT2
+01071	060010		LAC	VISPT3
+01072	065315		ADD	[5]
+01073	020010		DAC	VISPT3
+01074	060011		LAC	VISPT4
+01075	065315		ADD	[5]
+01076	020011		DAC	VISPT4
+01077	060012		LAC	VISPT5
+01100	065315		ADD	[5]
+01101	020012		DAC	VISPT5
+01102	110000		JMP	@BUMPPTS
+		;
+		;	update a dlxa or dlya
+		;
+01103	000000	UPDTSUB:0
+01104	160007		LAC	@VISPT2		; get old dlxa or dlya
+01105	164006		ADD	@VISPT		; add in increment
+01106	045316		AND	[1777']		; mask to position bits
+01107	020000		DAC	TEM2		; save new position
+01110	160010		LAC	@VISPT3		; get old dlxa or dlya again
+01111	045317		AND	[30000']		; get dlxa or dlya opcode bit
+01112	050000		IOR	TEM2		; or in position
+01113	120011		DAC	@VISPT4		; store it back on top of old dlxa or dlya
+01114	110000		JMP	@UPDTSUB		; return
+		;
+		;	update our explosion routine
+		;
+01115	000010	UPDTBIG:LWC	8.		; eight pieces to update
+01116	020000		DAC	CNT		; set counter
+01117	060000		LAC	[BIGX1INC-1]	; set pointer to update list
+01120	020006		DAC	VISPT
+01121	060000		LAC	[BIGX1-1]		; set pointers to display list
+01122	020007		DAC	VISPT2
+01123	020010		DAC	VISPT3
+01124	020011		DAC	VISPT4
+01125	000000	UPDTLOOP:JMS	UPDTSUB		; update x
+01126	034000		JMS	UPDTSUB		; update y
+01127	034000		JMS	BUMPPTS		; update pointers
+01130	030000		ISZ	CNT		; have i done all 8 bits?
+01131	011125		 JMP	UPDTLOOP		; no, do next one
+		;				yes, fall through
+		;	opponents explosion routine
+		;
+01132	060000	CHKOPP:	LAC	[THING-2]		; check explosion timers
+01133	020000		DAC	PTR
+01134	060000		LAC	[IM1-2]
+01135	020000		DAC	PTR2
+01136	104011		LWC	9.
+01137	020000		DAC	CNT2
+01140	000000	OPPBUMP:LAC	PTR
+01141	065310		ADD	[6.]
+01142	020000		DAC	PTR
+01143	060000		LAC	PTR2
+01144	065266		ADD	[11.]
+01145	020000		DAC	PTR2
+01146	071264		SUB	[9.]
+01147	020000		DAC	PTR3
+01150	030000		ISZ	CNT2
+01151	010000		 JMP	OPPLOOP
+01152	010000		JMP	UPDATE
+		
+01153	100000	OPPLOOP:LAC	@PTR2		; see if there is an explosion on this player
+01154	102001		ASN
+01155	010000		 JMP	OPPBUMP
+01156	130000		ISZ	@PTR2		; yes, but has it run out?
+01157	010000		 JMP	OPPBUMP
+01160	100001		CLA
+01161	120000		DAC	@PTR3		; yes, so indicate player unactive
+01162	060000		LAC	[DNOP]
+01163	120000		DAC	@PTR		; turn his explosion off
+01164	010000		JMP	OPPBUMP
+		;
+		;	keep updateing random explosion
+		;
+01165	034000	UPDATE:	JMS	RANDOM		; update explosion (get random number)
+01166	045320		AND	[77']
+01167	020000		DAC	TEM1
+		;XXX	IOR	[INC E,B00]
+01170	020000		DAC	INC1
+01171	045320		AND	[77']
+01172	003043		SAL	3
+01173	003043		SAL	3
+01174	003042		SAL	2
+01175	020000		DAC	TEM2
+01176	064000		ADD	TEM1
+		;XXX	XOR	[INC 344,344]
+01177	020000		DAC	INC2
+01200	060000		LAC	TEM2
+		;XXX	IOR	[INC B00,100']
+01201	020000		DAC	INC3
+01202	034000		JMS	RANDOM
+01203	045320		AND	[77']
+01204	020000		DAC	TEM1
+01205	003043		SAL	3
+01206	003043		SAL	3
+01207	003042		SAL	2
+01210	050000		IOR	TEM1
+01211	051321		IOR	[140300']
+01212	020000		DAC	INC4
+01213	055322		XOR	[22044']
+01214	020000		DAC	INC5
+01215	020000		DAC	INC6
+					; falls through to bullet checking routine
+		
+		;
+		;	check for bullet fired and if it hits its mark
+		;
+01216	000000	CHKBULL:LAC	[THING+3]
+01217	020000		DAC	PTR2
+01220	100004		IAC
+01221	020000		DAC	PTR3
+01222	060000		LAC	[IM1+5]
+01223	020000		DAC	PTR
+01224	071315		SUB	[5]
+01225	020000		DAC	SEEPT
+01226	104010		LWC	8.		; 8 imlacs to check
+01227	020000		DAC	CNT2
+01230	160000	DISP1:	LAC	@PTR
+01231	002001		ASZ
+01232	010000		 JMP	DISP2
+01233	004013	DISPNO:	LAW	11.
+01234	064000		ADD	PTR
+01235	020000		DAC	PTR
+01236	071315		SUB	[5]
+01237	020000		DAC	SEEPT
+01240	004006		LAW	6
+01241	064000		ADD	PTR2
+01242	020000		DAC	PTR2
+01243	100004		IAC
+01244	020000		DAC	PTR3
+01245	030000		ISZ	CNT2
+01246	010000		 JMP	DISP1
+		;
+		;	now check for repting keys
+		;
+01247	060000		LAC	REPTCNT		; rept on?
+01250	102001		ASN
+01251	010000		 JMP	CHKKS		; no, but check for keyset repeat
+01252	030000		ISZ	REPTCNT
+01253	010000		 JMP	CHKKS
+01254	100001		CLA
+01255	001021		KRB
+01256	074000		SAM	KEY
+01257	010000		 JMP	CHKKS
+01260	074000		SAM	MOVE		; only repeat :	move forwards?
+01261	011263		 JMP	.+2
+01262	011265		  JMP	.+3
+01263	074000		SAM	BACKUP		; move backwards?
+01264	010000		 JMP	CHKKS
+01265	104003		LWC	3.
+01266	020000		DAC	REPTCNT
+01267	010000		JMP	REPT		; do key again
+		
+01270	000000	REPTCNT:0
+		
+01271	060000	CHKKS:	LAC	KSCNT		; keyset rept on?
+01272	102001		ASN
+01273	110000		 JMP	@DISP		; no, so return
+01274	030000		ISZ	KSCNT
+01275	110000		 JMP	@DISP
+01276	100001		CLA
+01277	000000		MSW
+01300	074000		SAM	KEYSET		; is it the same??
+01301	110000		 JMP	@DISP
+01302	075323		SAM	[3433']		; move forwards?
+01303	011305		 JMP	.+2
+01304	011307		  JMP	.+3
+01305	075324		SAM	[3436']		; move backwards?
+01306	110000		 JMP	@DISP
+01307	104003		LWC	3.
+01310	020000		DAC	KSCNT
+01311	010000		JMP	KSREPT
+		;
+		;	if there is still a player visible then kill it
+		;
+01312	130000	DISP2:	ISZ	@PTR		; is it totally fired yet?
+01313	010000		 JMP	DISPNO
+01314	160000		LAC	@SEEPT		; is he still alive
+01315	102002		ASM
+01316	010000		 JMP	DISPNO
+01317	030000		ISZ	PTR
+01320	160000		LAC	@PTR		; get our old direction
+01321	045277		AND	[3]
+01322	120000		DAC	@[SAVEDIR]
+01323	030000		ISZ	PTR
+01324	160000		LAC	@PTR		; get our old x
+01325	120000		DAC	@[SAVEDX]
+01326	030000		ISZ	PTR
+01327	160000		LAC	@PTR		; get our old y
+01330	120000		DAC	@[SAVEDY]
+01331	060000		LAC	PTR		; reset pointer
+01332	071277		SUB	[3]
+01333	020000		DAC	PTR
+01334	071315		SUB	[5]
+01335	020000		DAC	PTR4		; set up pointer for see routine
+01336	004011		LAW	9.
+01337	064000		ADD	CNT2
+01340	020000		DAC	KILL
+01341	020000		DAC	IID
+01342	134000		JMS	@[SEE]		; see if player hasn't moved out of the way
+01343	010000		 JMP	DISPNO		; he made it in time
+01344	100005		COA			; no, so shoot him down
+01345	120000		DAC	@PTR4		; indicate that he is now dying
+01346	004003		LAW	3			; send player killed message
+01347	034000		JMS	SEND1
+01350	060000		LAC	MYBIT		; send my id
+01351	034000		JMS	SEND1
+01352	060000		LAC	KILL		; send id of player killed
+01353	034000		JMS	SEND1
+01354	060000		LAC	[DNOP]
+01355	120000		DAC	@PTR2		; turn off eyes
+01356	060000		LAC	JMSEXP		; put in explosion in place of id
+01357	120000		DAC	@PTR3
+01360	060000		LAC	PTR4		; point to explosion count
+01361	065264		ADD	[9.]
+01362	020000		DAC	PTR4
+01363	104074		LWC	60.		; set explosion to last 1 1/2 sec.
+01364	120000		DAC	@PTR4
+01365	060000		LAC	MYBIT		; bump our score
+01366	034000		JMS	UPSCORE
+01367	010000		JMP	DISPNO
+		
+		;
+		;	send a word to the 10
+		;
+01370	000000	SEND1:	0
+01371	020000		DAC	TEM1		; save character
+01372	034000		JMS	REFR		; keep display up
+01373	002100		TSF			; wait for output flag
+01374	011372		 JMP	.-2		; not ready yet
+01375	060000		LAC	TEM1		; get character back
+01376	001043		TPC			; transmit character
+01377	060000		LAC	TEM1
+01400	110000		JMP	@SEND1		; return
+		;
+		;	random number generator
+		;
+01401	000000	RANDOM:	0
+01402	060000		LAC RND
+01403	064000		ADD MYBIT
+01404	003002		RAL 2
+01405	020000		DAC RND
+01406	154000		XOR @RND
+01407	020000		DAC RND
+01410	110000		JMP @RANDOM
+		
+01411	000000	RND:	0
+		
+		;
+		;	update score in info tables and in display list
+		;	enter with id in ac
+		;
+01412	000000	UPSCORE:0
+01413	020000		DAC	SAVEID		; save id
+01414	104010		LWC	8.		; now turn all ! and  * off
+01415	020000		DAC	UPCNT
+01416	060000		LAC	[SCORE+3]
+01417	020000		DAC	PTSCORE
+01420	060000	CLRALL:	LAC	[DNOP]
+01421	120000		DAC	@PTSCORE
+01422	004005		LAW	5
+01423	064000		ADD	PTSCORE
+01424	020000		DAC	PTSCORE
+01425	060000		LAC	[DNOP]
+01426	120000		DAC	@PTSCORE
+01427	004011		LAW	9.
+01430	064000		ADD	PTSCORE
+01431	020000		DAC	PTSCORE
+01432	030000		ISZ	UPCNT
+01433	010000		 JMP	CLRALL
+01434	060000		LAC	SAVEID		; now bump shooting players score
+01435	037571		JMS	POSITION		; position us to correct table
+01436	060000		LAC	ITEMP1		; bump pointer to count
+01437	065325		ADD	[4]
+01440	020000		DAC	ITEMP1
+01441	130000		ISZ	@ITEMP1		; bump score by one
+01442	100000		 NOP
+01443	060000		LAC	SAVEID		; point to shooting players score in display
+01444	034000		JMS	POINTSC
+01445	034000		JMS	SCOREIT
+01446	004041		LAW	41'		; insert exclamation mark
+01447	034000		JMS	GETCHR
+01450	120000		DAC	@PTSCORE
+01451	060000		LAC	KILL		; now do shot player shot count
+01452	037571		JMS	POSITION
+01453	065265		ADD	[10.]
+01454	020000		DAC	ITEMP1
+01455	130000		ISZ	@ITEMP1		; bump it also
+01456	100000		 NOP
+01457	060000		LAC	KILL		; next update the shot count in display
+01460	034000		JMS	POINTSC
+01461	065315		ADD	[5]
+01462	020000		DAC	PTSCORE
+01463	034000		JMS	SCOREIT
+01464	004052		LAW	52'		; insert asteric
+01465	034000		JMS	GETCHR
+01466	120000		DAC	@PTSCORE
+01467	000000		BEL			; ring bell indicating player shot
+01470	110000		JMP	@UPSCORE		; return
+		
+01471	000000	POINTSC:0
+01472	100006		CIA
+01473	020000		DAC	UPCNT
+01474	060000		LAC	[SCORE-14.]		; point to display list to update score
+01475	065326		ADD	[14.]
+01476	030000		ISZ	UPCNT
+01477	011475		 JMP	.-2
+01500	020000		DAC	PTSCORE
+01501	110000		JMP	@POINTSC
+		;
+		;	score generator subroutine
+		;	enter with	itemp1 -> score to be converted
+		;			ptscore -> 3 words where djmses are to be placed
+		;	leave with ptscore -> word 4 (one past the 3 djmses)
+		;
+01502	000000	SCOREIT:0
+01503	100001		CLA
+01504	020000		DAC	HUNDR
+01505	020000		DAC	TENS
+01506	020000		DAC	ONES
+01507	160000		LAC	@ITEMP1		; get current score
+01510	071327		SUB	[1000.]		; make it mod 1000
+01511	102002		ASM
+01512	011510		 JMP	.-2
+01513	065327		ADD	[1000.]
+01514	120000		DAC	@ITEMP1		; store it back for posterity
+01515	071330		SUB	[100.]
+01516	002002		ASP
+01517	010000		 JMP	DOTENS
+01520	030000		ISZ	HUNDR
+01521	011515		 JMP	.-4
+		
+01522	065330	DOTENS:	ADD	[100.]
+01523	071265		SUB	[10.]
+01524	002002		ASP
+01525	010000		 JMP	DOONES
+01526	030000		ISZ	TENS
+01527	011523		 JMP	.-4
+		
+01530	065265	DOONES:	ADD	[10.]
+01531	020000		DAC	ONES
+01532	060000		LAC	HUNDR
+01533	102001		ASN
+01534	010000		 JMP	ZROSUP
+01535	034000		JMS	DODIGIT
+01536	060000		LAC	TENS
+01537	034000	DTENS:	JMS	DODIGIT
+01540	060000		LAC	ONES
+01541	034000		JMS	DODIGIT
+01542	110000		JMP	@SCOREIT
+01543	104020	ZROSUP:	LWC	20'
+01544	034000		JMS	DODIGIT
+01545	060000		LAC	TENS
+01546	102001		ASN
+01547	104020		 LWC	20'
+01550	010000		JMP	DTENS
+		
+01551	000000	DODIGIT:0
+		;XXX	ADD	[60'-40']
+01552	165331		ADD	@[24']
+01553	020000		DAC	UPCNT
+01554	160000		LAC	@UPCNT
+01555	120000	DACIT:	DAC	@PTSCORE
+01556	030000		ISZ	PTSCORE
+01557	110000		JMP	@DODIGIT
+		
+01560	000000	SAVEID:	0
+01561	000000	PTSCORE:0
+01562	000000	UPCNT:	0
+01563	000000	ONES:	0
+01564	000000	TENS:	0
+01565	000000	HUNDR:	0
+		
+		;
+		;	build a long vector instruction
+		;
+01566	000000	LV:	0	
+01567	060000		LAC	XDELTA
+01570	045332		AND	[40000']
+01571	020000		DAC	TEM3
+01572	060000		LAC	XDELTA
+01573	002002		ASP
+01574	100006		CIA
+01575	020000		DAC	XDELTA
+01576	060000		LAC	YDELTA
+01577	045333		AND	[20000']
+01600	050000		IOR	TEM3
+01601	020000		DAC	TEM3
+01602	060000		LAC	YDELTA
+01603	002002		ASP
+01604	100006		 CIA
+01605	020000		DAC	YDELTA
+01606	070000		SUB	XDELTA
+01607	102002		ASM
+01610	010000		 JMP	LV1
+01611	045334		AND	[7777']
+01612	051332		IOR	[40000']
+01613	120005		DAC	@DPTR
+01614	060000		LAC	XDELTA
+01615	050000		IOR	BEAMBIT
+01616	120005		DAC	@DPTR
+01617	060000		LAC	YDELTA
+01620	010000		JMP	LV2
+		
+01621	100006	LV1:	CIA
+01622	045334		AND	[7777']
+01623	051332		IOR	[40000']
+01624	120005		DAC	@DPTR
+01625	060000		LAC	YDELTA
+01626	050000		IOR	BEAMBIT
+01627	120005		DAC	@DPTR
+01630	060000		LAC	XDELTA
+01631	051335		IOR	[10000']
+01632	050000	LV2:	IOR	TEM3
+01633	120005		DAC	@DPTR
+01634	110000		JMP	@LV
+		
+		;
+		;	generate new display
+		;	send i moved message to 10
+		;	set up possible visible opponents
+		;
+01635	000000	PRINT:	0	
+01636	160000		LAC	@DSTAT		; check status of player
+01637	002001		ASZ			; is he not playing?
+01640	010000		 JMP	INGAME		; no
+01641	004116		LAW	116'		; yes, display a 'n' then
+01642	010000		JMP	SETST
+		
+01643	060000	HEACT:	LAC	[DJMS D040,]	; if he is active then don't display anything
+01644	010000		JMP	SETST2
+		
+01645	002002	INGAME:	ASP			; is he dying?
+01646	010000		 JMP	HEACT		; no, then he is active!
+01647	004104		LAW	104'		; yes, then display a 'd' for dead
+01650	034000	SETST:	JMS	GETCHR		; get the character
+01651	120000	SETST2:	DAC	@[DEAD]		; put it in display
+01652	160000		LAC	@DIR		; first do direction letter
+01653	045277		AND	[3]
+01654	064000		ADD	[DIRLET]
+01655	020000		DAC	TEM1
+01656	160000		LAC	@TEM1
+01657	034000		JMS	GETCHR
+01660	120000		DAC	@[LETTER]
+01661	060000		LAC	TOPSW		; see if top or inside view
+01662	102001		ASN
+01663	010000		 JMP	INSIDE
+01664	060000	TOPV:	LAC	[DLIST-1]		;write over maze display list
+01665	020005		DAC	DPTR
+		;XXX	LAC	[DLYA 1600',]
+01666	120005		DAC	@DPTR
+		;XXX	LAC	[DJMS DNL3,]
+01667	120005		DAC	@DPTR
+01670	104040		LWC	32.
+01671	020000		DAC	CNT
+01672	060000		LAC	[MAZE-1]
+01673	020000		DAC	PTR
+01674	160000		LAC	@DY
+01675	003043		SAL	3
+01676	003041		SAL	1
+01677	164000		ADD	@DX
+01700	100004		IAC
+01701	100006		CIA
+01702	020000		DAC	PTR4
+01703	104020	NXTW:	LWC	16.
+01704	020000		DAC	CNT2
+01705	061314		LAC	[100000']
+01706	020000		DAC	BIT
+01707	030000		ISZ	PTR
+01710	030000	NXTB:	ISZ	PTR4		; have we reached our location?
+01711	011713		 JMP	.+2
+01712	010000		  JMP	ME
+01713	160000		LAC	@PTR		; see is square open or closed
+01714	044000		AND	BIT
+01715	002001		ASZ
+01716	010000		 JMP	ON
+01717	060000		LAC	[DJMS SPMAZE,]
+01720	010000		JMP	ON+1
+		
+01721	160000	ME:	LAC	@DIR		; figure out which arrow to use
+01722	045277		AND	[3]
+01723	064000		ADD	[ARROWS]
+01724	020000		DAC	PTR3
+01725	160000		LAC	@PTR3
+01726	010000		JMP	ON+1
+		
+01727	060000	ON:	LAC	[DJMS CHARMZE,]
+01730	120005		DAC	@DPTR
+01731	100010		CLL
+01732	060000		LAC	BIT
+01733	003021		RAR	1
+01734	020000		DAC	BIT
+01735	030000		ISZ	CNT2		; this line done?
+01736	010000		JMP	NXTB
+01737	060000		LAC	[DJMS DNL3,]
+01740	120005		DAC	@DPTR
+01741	030000		ISZ	CNT
+01742	010000		 JMP	NXTW		; this row done?
+01743	100001		CLA			; dhlt at end
+01744	120005		DAC	@DPTR
+01745	110000		JMP	@PRINT
+		
+01746	034000	INSIDE:	JMS	PNTBIT
+01747	060000		LAC	[WALLS]
+01750	020000		DAC	WPTR
+01751	100004		IAC
+01752	020000		DAC	WPTR2
+01753	100001		CLA
+01754	020000		DAC	CNT
+01755	060000		LAC	[DLIST-1]
+01756	020005		DAC	DPTR
+01757	061333		LAC	[20000']
+01760	020000		DAC	BEAMBIT
+01761	102010		DSN
+01762	011761		 JMP	.-1
+01763	160000		LAC	@DIR
+01764	045261		AND	[1]
+01765	002001		ASZ
+01766	010000		 JMP	EW
+01767	034000		JMS	CREMENT
+01770	020000		DAC	TEM1
+01771	100006		CIA
+01772	045302		AND	[20']
+01773	050001		IOR	[RAL 1]
+01774	020000		DAC	NOP2
+01775	055302		XOR	[20']
+01776	020000		DAC	NOP3
+01777	060000	PRNT1:	LAC	MPTR
+02000	064000		ADD	TEM1
+02001	020000		DAC	NEXTBIT
+02002	160000		LAC	@NEXTBIT
+02003	044000		AND	BIT
+02004	020000		DAC	NEXTBIT
+02005	060000		LAC	BIT
+02006	100010		CLL
+02007	100000	NOP2:	NOP
+02010	144000		AND	@MPTR
+02011	034000		JMS	LBIT
+02012	060000		LAC	BIT
+02013	100010		CLL
+02014	100000	NOP3:	NOP
+02015	144000		AND	@MPTR
+02016	034000		JMS	RBIT
+02017	060000		LAC	MPTR
+02020	064000		ADD	TEM1
+02021	020000		DAC	MPTR
+02022	060000		LAC	NEXTBIT
+02023	036356		JMS	ENDCHECK
+02024	060000		LAC	CNT
+02025	075276		SAM	[31.]		; special check
+02026	012030		 JMP	.+2
+02027	012361		  JMP	CLOSEOUT
+02030	030000		ISZ	WPTR
+02031	030000		ISZ	WPTR2
+02032	030000		ISZ	CNT
+02033	010000		 JMP	PRNT1
+02034	034000	EW:	JMS	CREMENT
+02035	020000		DAC	TEM1
+02036	045302		AND	[20']
+02037	050001		IOR	[RAL 1]
+02040	020000		DAC	NOP4
+02041	020000		DAC	NOP5
+02042	060000	PRNT2:	LAC	BIT
+02043	100010		CLL
+02044	100000	NOP5:	NOP
+02045	144000		AND	@MPTR
+02046	020000		DAC	NEXTBIT
+02047	060000		LAC	MPTR
+02050	064000		ADD	TEM1
+02051	020000		DAC	TEM2
+02052	060000		LAC	BIT
+02053	144000		AND	@TEM2
+02054	034000		JMS	LBIT
+02055	060000		LAC	MPTR
+02056	070000		SUB	TEM1
+02057	020000		DAC	TEM2
+02060	060000		LAC	BIT
+02061	144000		AND	@TEM2
+02062	034000		JMS	RBIT
+02063	060000		LAC	BIT
+02064	100010		CLL
+02065	100000	NOP4:	NOP
+02066	020000		DAC	BIT
+02067	060000		LAC	NEXTBIT
+02070	036356		JMS	ENDCHECK
+02071	030000		ISZ	WPTR
+02072	030000		ISZ	WPTR2
+02073	030000		ISZ	CNT
+02074	010000		JMP	PRNT2
+		
+02075	000000	LBIT:	0	
+02076	020000		DAC	LASTLEF
+02077	002001		ASZ
+02100	010000		 JMP	LB1
+02101	160000		LAC	@WPTR		 ; hallway
+02102	100006		CIA
+02103	064000		ADD	WALLS
+02104	051335		IOR	[10000']
+02105	120005		DAC	@DPTR
+02106	160000		LAC	@WPTR
+02107	064000		ADD	WALLS
+02110	051333		IOR	[20000']
+02111	120005		DAC	@DPTR
+02112	060000		LAC	[DJMS WAIT,]
+02113	120005		DAC	@DPTR
+02114	060000		LAC	CNT
+02115	102001		ASN
+02116	010000		 JMP	LB2
+02117	100011		CAL
+02120	020000		DAC	XDELTA
+02121	160000		LAC	@WPTR
+02122	003041		SAL	1
+02123	100006		CIA
+02124	020000		DAC	YDELTA
+02125	034000		JMS	LV
+02126	160000	LB2:	LAC	@WPTR2
+02127	100006		CIA
+02130	064000		ADD	WALLS
+02131	051333		IOR	[20000']
+02132	120005		DAC	@DPTR
+02133	060000		LAC	[DJMS WAIT,]
+02134	120005		DAC	@DPTR
+02135	100011		CAL
+02136	020000		DAC	YDELTA
+02137	160000		LAC	@WPTR
+02140	170000		SUB	@WPTR2
+02141	020000		DAC	XDELTA
+02142	034000		JMS	LV
+02143	034000		JMS	FIX
+02144	100011		CAL
+02145	020000		DAC	XDELTA
+02146	160000		LAC	@WPTR2
+02147	003041		SAL	1
+02150	020000		DAC	YDELTA
+02151	034000		JMS	LV
+02152	061333		LAC	[20000']
+02153	020000		DAC	BEAMBIT
+02154	100011		CAL
+02155	020000		DAC	YDELTA
+02156	160000		LAC	@WPTR2
+02157	170000		SUB	@WPTR
+02160	020000		DAC	XDELTA
+02161	034000		JMS	LV
+02162	110000		JMP	@LBIT
+		
+02163	160000	LB1:	LAC	@WPTR2		; wall
+02164	100006		CIA
+02165	064000		ADD	WALLS
+02166	051335		IOR	[10000']
+02167	120005		DAC	@DPTR
+02170	160000		LAC	@WPTR2
+02171	064000		ADD	WALLS
+02172	051333		IOR	[20000']
+02173	120005		DAC	@DPTR
+02174	060000		LAC	[DJMS WAIT,]
+02175	120005		DAC	@DPTR
+02176	160000		LAC	@WPTR
+02177	170000		SUB	@WPTR2
+02200	020000		DAC	YDELTA
+02201	100006		CIA
+02202	020000		DAC	XDELTA
+02203	034000		JMS	LV
+02204	160000		LAC	@WPTR
+02205	100006		CIA
+02206	064000		ADD	WALLS
+02207	051335		IOR	[10000']
+02210	120005		DAC	@DPTR
+02211	055317		XOR	[30000']
+02212	120005		DAC	@DPTR
+02213	060000		LAC	[DJMS WAIT,]
+02214	120005		DAC	@DPTR
+02215	160000		LAC	@WPTR
+02216	170000		SUB	@WPTR2
+02217	020000		DAC	XDELTA
+02220	020000		DAC	YDELTA
+02221	034000		JMS	LV
+02222	110000		JMP	@LBIT
+		
+02223	000000	RBIT:	0	
+02224	020000		DAC	LASTRIG
+02225	002001		ASZ
+02226	010000		 JMP	RB1
+02227	160000		LAC	@WPTR		 ; hallway
+02230	064000		ADD	WALLS
+02231	051335		IOR	[10000']
+02232	120005		DAC	@DPTR
+02233	055317		XOR	[30000']
+02234	120005		DAC	@DPTR
+02235	060000		LAC	[DJMS WAIT,]
+02236	120005		DAC	@DPTR
+02237	060000		LAC	CNT
+02240	102001		ASN
+02241	010000		 JMP	RB2
+02242	100011		CAL
+02243	020000		DAC	XDELTA
+02244	160000		LAC	@WPTR
+02245	003041		SAL	1
+02246	100006		CIA
+02247	020000		DAC	YDELTA
+02250	034000		JMS	LV
+02251	160000	RB2:	LAC	@WPTR2
+02252	100006		CIA
+02253	064000		ADD	WALLS
+02254	051333		IOR	[20000']
+02255	120005		DAC	@DPTR
+02256	060000		LAC	[DJMS WAIT,]
+02257	120005		DAC	@DPTR
+02260	100011		CAL
+02261	020000		DAC	YDELTA
+02262	160000		LAC	@WPTR2
+02263	170000		SUB	@WPTR
+02264	020000		DAC	XDELTA
+02265	034000		JMS	LV
+02266	034000		JMS	FIX
+02267	100011		CAL
+02270	020000		DAC	XDELTA
+02271	160000		LAC	@WPTR2
+02272	003041		SAL	1
+02273	020000		DAC	YDELTA
+02274	034000		JMS	LV
+02275	061333		LAC	[20000']
+02276	020000		DAC	BEAMBIT
+02277	100011		CAL
+02300	020000		DAC	YDELTA
+02301	160000		LAC	@WPTR
+02302	170000		SUB	@WPTR2
+02303	020000		DAC	XDELTA
+02304	034000		JMS	LV
+02305	110000		JMP	@RBIT
+		
+02306	160000	RB1:	LAC	@WPTR2		; wall
+02307	064000		ADD	WALLS
+02310	051335		IOR	[10000']
+02311	120005		DAC	@DPTR
+02312	055317		XOR	[30000']
+02313	120005		DAC	@DPTR
+02314	060000		LAC	[DJMS WAIT,]
+02315	120005		DAC	@DPTR
+02316	160000		LAC	@WPTR
+02317	170000		SUB	@WPTR2
+02320	020000		DAC	XDELTA
+02321	020000		DAC	YDELTA
+02322	034000		JMS	LV
+02323	160000		LAC	@WPTR2
+02324	064000		ADD	WALLS
+02325	051335		IOR	[10000']
+02326	120005		DAC	@DPTR
+02327	160000		LAC	@WPTR2
+02330	100006		CIA
+02331	064000		ADD	WALLS
+02332	051333		IOR	[20000']
+02333	120005		DAC	@DPTR
+02334	060000		LAC	[DJMS WAIT,]
+02335	120005		DAC	@DPTR
+02336	160000		LAC	@WPTR
+02337	170000		SUB	@WPTR2
+02340	020000		DAC	XDELTA
+02341	100006		CIA
+02342	020000		DAC	YDELTA
+02343	034000		JMS	LV
+02344	110000		JMP	@RBIT
+		
+02345	000000	FIX:	0	
+02346	100010		CLL
+02347	060000		LAC	NEXTBIT
+02350	102001		ASN
+02351	100030		 STL
+02352	100001		CLA
+02353	003023		RAR	3
+02354	020000		DAC	BEAMBIT
+02355	110000		JMP	@FIX
+		
+02356	000000	ENDCHECK:0	
+02357	102001		ASN
+02360	112356		 JMP	@ENDCHECK
+02361	000000	CLOSEOUT:LAC	CNT		; set length of hallway
+02362	020123		DAC	HALLNGTH
+02363	160000		LAC	@WPTR2
+02364	064000		ADD	WALLS
+02365	051333		IOR	[20000']
+02366	120005		DAC	@DPTR
+02367	055317		XOR	[30000']
+02370	120005		DAC	@DPTR
+02371	060000		LAC	[DJMS WAIT,]
+02372	120005		DAC	@DPTR
+02373	100011		CAL
+02374	020000		DAC	YDELTA
+02375	160000		LAC	@WPTR2
+02376	003041		SAL	1
+02377	020000		DAC	ETEM
+02400	100006		CIA
+02401	020000		DAC	XDELTA
+02402	034000		JMS	LV
+02403	060000		LAC	LASTLEF
+02404	002001		ASZ
+02405	061333		 LAC	[20000']
+02406	020000		DAC	BEAMBIT
+02407	100011		CAL
+02410	020000		DAC	XDELTA
+02411	060000		LAC	ETEM
+02412	100006		CIA
+02413	020000		DAC	YDELTA
+02414	034000		JMS	LV
+02415	061333		LAC	[20000']
+02416	020000		DAC	BEAMBIT
+02417	100011		CAL
+02420	020000		DAC	YDELTA
+02421	060000		LAC	ETEM
+02422	020000		DAC	XDELTA
+02423	034000		JMS	LV
+02424	060000		LAC	LASTRIG
+02425	102001		ASN
+02426	010000		 JMP	EN1
+02427	100011		CAL
+02430	020000		DAC	XDELTA
+02431	060000		LAC	ETEM
+02432	020000		DAC	YDELTA
+02433	034000		JMS	LV
+02434	100011	EN1:	CAL
+02435	120005		DAC	@DPTR		; insert the dhlt
+02436	034000		JMS	VISIBLE		; now check for visible opponents
+02437	110000		JMP	@PRINT
+		
+		;
+		;	check for visible opponents
+		;
+02440	000000	VISIBLE:0
+02441	104011		LWC	9.		; 8 imlacs to do
+02442	020000		DAC	CNT2
+02443	060000		LAC	[DSPTCH-1]	; set pointer to imlac info tables
+02444	020006		DAC	VISPT
+02445	060000		LAC	[THING-1]		; set up pointer to dlya's
+02446	020007		DAC	VISPT2
+02447	100004		IAC			; point to dsts's
+02450	020010		DAC	VISPT3
+02451	065307		ADD	[2]		; point to djms's eyes
+02452	020011		DAC	VISPT4
+02453	100004		IAC			; point to djms's body (name)
+02454	020012		DAC	VISPT5
+02455	000000	VISLOOP:ISZ	CNT2		; have we checked all 8?
+02456	012460		 JMP	.+2		; no
+02457	110000		  JMP	@VISIBLE		; yes, return
+02460	160006		LAC	@VISPT		; get address of imlac's info table
+02461	020000		DAC	SEEPT
+02462	020000		DAC	PTR4
+02463	160000		LAC	@SEEPT		; may change it on us, so get status
+02464	002001		ASZ			; is this imlac playing?
+02465	010000		 JMP	PLAYING		; yes
+02466	012471		JMP	.+3
+02467	000000	BLOWING:LAC	JMSEXP
+02470	012472		JMP	.+2
+02471	060000	NOSEE:	LAC	[DNOP]		; no, so make him invisble or exploding
+02472	030007		ISZ	VISPT2		; don't change y
+02473	030010		ISZ	VISPT3		; don't change dsts
+02474	120012		DAC	@VISPT5		; set to invisible or exploding
+02475	060000		LAC	[DNOP]		; no eyes wanted
+02476	120011		DAC	@VISPT4
+02477	034000	BUMP:	JMS	BUMPPTS		; update pointers to next imlac
+02500	010000		JMP	VISLOOP		; now do next imlac
+		;
+		;	active player
+		;
+02501	000011	PLAYING:LAW	9.		; set id
+02502	064000		ADD	CNT2
+02503	020000		DAC	IID
+02504	034000		JMS	SEEUS		; see if it can be seen
+02505	010000		 JMP	NOSEE		; can't be seen
+02506	160000		LAC	@PTR4		; could he be blowing up?
+02507	002002		ASP
+02510	010000		 JMP	HEVIS		; he is visible
+02511	010000		JMP	BLOWING		; he is blowing up
+		
+02512	000000	SEEUS:	0
+02513	160000		LAC	@DIR
+02514	045277		AND	[3]
+02515	120000		DAC	@[SAVEDIR]
+02516	160000		LAC	@DX
+02517	120000		DAC	@[SAVEDX]
+02520	160000		LAC	@DY
+02521	120000		DAC	@[SAVEDY]
+02522	134000		JMS	@[SEE]
+02523	110000		JMP	@SEEUS
+02524	030000		ISZ	SEEUS
+02525	110000		JMP	@SEEUS
+		
+02526	000000	SEEPT:	0
+02527	000000	FTEMP:	0
+		
+		;
+		;	visible opponnent!
+		;
+02530	000000	FIGX:	0
+02531	160000		LAC	@[DISTAN]		; now i know i see him
+02532	064000		ADD	[WALLS]		; get currect position for name
+02533	020000		DAC	FTEMP
+02534	160000		LAC	@FTEMP
+02535	100006		CIA
+02536	064000		ADD	WALLS
+02537	051333		IOR	[20000']		; make it a dlya
+02540	110000		JMP	@FIGX
+02541	034000	HEVIS:	JMS	FIGX		; figure the new dlxa
+02542	120007		DAC	@VISPT2		; stick it in
+02543	160000		LAC	@[DISTAN]		; get distance to opponent
+02544	003063		SAR	3			; scale it to 2 significant bits
+02545	055277		XOR	[3]		; complement meanning
+02546	050000		IOR	[DSTS 0]		; make it a dsts instruction
+02547	120010		DAC	@VISPT3		; stick it in display
+02550	034000		JMS	FIGEYES		; figure out whether or not eyes should be displayed
+02551	120011		DAC	@VISPT4
+02552	060000		LAC	IID		; now see which opponent we can see
+02553	064000		ADD	[TNUM-1]		; get appropriate name
+02554	020000		DAC	TEM2
+02555	160000		LAC	@TEM2
+02556	120012		DAC	@VISPT5		; stick appropriate djmp to name in display list
+02557	010000		JMP	BUMP		; now do next opponent
+		
+02560	000000	FIGEYES:0
+02561	160000		LAC	@DIR		; see if we are facing each other
+02562	045277		AND	[3]
+02563	065325		ADD	[4]
+02564	170000		SUB	@[IDIR]
+02565	045277		AND	[3]
+02566	064000		ADD	[EYTAB]
+02567	020000		DAC	FTEMP
+02570	160000		LAC	@FTEMP
+02571	110000		JMP	@FIGEYES
+		;
+		;	shift to the left 13 subroutine
+		;
+02572	000000	SAR13:	0
+02573	003063		SAR	3
+02574	003063		SAR	3
+02575	003063		SAR	3
+02576	003063		SAR	3
+02577	003061		SAR	1
+02600	102001		ASN
+02601	004001		 LAW	1
+02602	110000		JMP	@SAR13
+		;
+		;	blow us up and start again
+		;
+02603	100001	ENDER:	CLA			; return to inside display
+02604	020000		DAC	TOPSW
+02605	060000		LAC	[AD2]		; set blow up display as current display
+02606	020000		DAC	WHICHD
+02607	060000		LAC	[BIGX1INC-1]	; set pointer to increment table
+02610	020006		DAC	VISPT
+02611	104004		LWC	4.		; 8 pieces to do but we will set up 2 at a time
+02612	020000		DAC	CNT
+02613	000000	BLOWLOOP:JMS	RANDOM		; get random number
+02614	034000		JMS	SAR13		; scale it to 2 +- sig bits
+02615	020000		DAC	TEM1		; save for next bit
+02616	120006		DAC	@VISPT		; store delta in first x
+02617	034000		JMS	RANDOM		; get another random number
+02620	034000		JMS	SAR13		; scale it too
+02621	020000		DAC	TEM2		; also save it
+02622	120006		DAC	@VISPT		; store delta in first y
+02623	060000		LAC	TEM1		; get back first delta x
+02624	100006		CIA			; we want to balance explosion so
+02625	120006		DAC	@VISPT		; make next bit go opposite direction
+02626	060000		LAC	TEM2		; store second y also in opposite direction
+02627	100006		CIA
+02630	120006		DAC	@VISPT
+02631	030000		ISZ	CNT		; are we done with setting up deltas
+02632	012613		 JMP	BLOWLOOP		; no, do next 2
+02633	060000		LAC	[BIGX1-1]		; now reset display list dlxas and dlyas
+02634	020000		DAC	TEM1
+02635	104010		LWC	8.		; eight bits to do
+02636	020000		DAC	CNT
+02637	000000	CLRLOOP:JMS	CLRSUB		; reset the dlxa
+02640	034000		JMS	CLRSUB		; reset the dlya
+02641	060000		LAC	TEM1		; update pointer to next bit of explosion
+02642	065315		ADD	[5]
+02643	020000		DAC	TEM1
+02644	030000		ISZ	CNT		; did we do all eight bits?
+02645	010000		 JMP	CLRLOOP		; no, do the rest
+02646	010000		JMP	RETN		; wait explosion out
+		
+02647	000000	CLRSUB:	0
+02650	030000		ISZ	TEM1		; position pointer
+02651	160000		LAC	@TEM1		; get dlxa or dlya
+02652	045317		AND	[30000']		; get opcode bits
+02653	051336		IOR	[1000']		; position to center of screen
+02654	120000		DAC	@TEM1		; stuff it back
+02655	110000		JMP	@CLRSUB		; return
+		
+		;
+		;	tty input handler
+		;
+02656	000000	CHARIN:	0
+02657	002040		RSF			; tty input?
+02660	010000		 JMP	EXIT		; no, so ignore interupt
+02661	100001		CLA
+02662	001033		RRC			; get character
+02663	045271		AND	[177']		; mask to 7 characters
+02664	020000		DAC	INCHAR		; save it
+		;
+		;	check to see if we are waiting for characters
+		;
+02665	060000		LAC	ICNT
+02666	102001		ASN
+02667	010000		 JMP	SETUP		; no so interpret character we got
+02670	060000		LAC	INCHAR		; yes, so stuff character in info table
+02671	120017		DAC	@17'
+02672	030000		ISZ	ICNT		; was that all we wanted?
+02673	010000		 JMP	EXIT		; no, wait for more
+02674	110000		JMP	@IDSPTCH		; yes, go to routine now
+		
+02675	060000	SETUP:	LAC	[ININFO-1]	; set up input buffer
+		;XXX	DAC	17`
+02676	020017		DAC	17'	;XXX - is a grav correct? I don't see mention in MIDAS
+		;
+		;	check for imlac wants out message
+		;	if he does then do the following:
+		;	1)	indicate imlac non-active in info table
+		;	2)	dnop his score, body, eyes and name
+		;
+02677	060000	CHK1:	LAC	INCHAR		; get character read back
+02700	075261		SAM	[1]		; is it type 1?
+02701	010000		 JMP	CHK2		; no, check next type
+02702	104001		LWC	1			; wait for one more word [id]
+02703	020000		DAC	ICNT
+02704	060000		LAC	[DTYP1]		; set up dispatch address
+02705	020000	SETOUT:	DAC	IDSPTCH
+02706	010000		JMP	EXIT		; wait for characters to come in
+		
+02707	034000	DTYP1:	JMS	TESTID		; get id of imlac that wants out
+02710	102001	GONER:	ASN
+02711	034000		 JMS	ERROR		; error if id = 0
+02712	037571		JMS	POSITION		; get position into info table
+02713	020017		DAC	17'
+02714	104012		LWC	10.
+02715	020000		DAC	ICNT2		; clear info entry
+02716	100001		CLA
+02717	120000		DAC	@ITEMP1		; clear status
+02720	120017		DAC	@17'		; clear the rest
+02721	030000		ISZ	ICNT2
+02722	012720		 JMP	.-2
+02723	034000		JMS	GETCNT		; now clear display list score
+02724	060000		LAC	[SCORE-15.]
+02725	065326		ADD	[14.]
+02726	030000		ISZ	ICNT2
+02727	012725		 JMP	.-2
+02730	020017		DAC	17'
+02731	060000		LAC	[DNOP]		; dnop all digits
+02732	120017		DAC	@17'
+02733	120017		DAC	@17'
+02734	120017		DAC	@17'
+02735	120017		DAC	@17'
+02736	030017		ISZ	17'
+02737	120017		DAC	@17'
+02740	120017		DAC	@17'
+02741	120017		DAC	@17'
+02742	120017		DAC	@17'
+02743	034000		JMS	GETCNT		; now clear displayed name
+02744	060000		LAC	[IML1-9.]
+02745	065263		ADD	[8.]
+02746	030000		ISZ	ICNT2
+02747	012745		 JMP	.-2
+02750	020017		DAC	17'
+02751	060000		LAC	[DJMS D040,]	; get space
+02752	120017		DAC	@17'
+02753	120017		DAC	@17'
+02754	120017		DAC	@17'
+02755	120017		DAC	@17'
+02756	120017		DAC	@17'
+02757	120017		DAC	@17'
+02760	120017		DAC	@17'
+02761	034000		JMS	GETCNT		; finally make him invisible
+02762	060000		LAC	[THING-4]
+02763	065310		ADD	[6]
+02764	030000		ISZ	ICNT2
+02765	012763		 JMP	.-2
+02766	020017		DAC	17'
+02767	060000		LAC	[DNOP]
+02770	120017		DAC	@17'		; clear eyes
+02771	120017		DAC	@17'		; clear body (name)
+02772	060000		LAC	ININFO		; see if it is my real it that is leaving
+02773	074000		SAM	MYREAL		; if so then exit program, return to ssv
+02774	010000		 JMP	CHKNR
+		;
+		;	exit routine
+		;	send player wants out to 10
+		;	then return to ssv
+		;
+02775	004001		LAW	1			; send i want out code
+02776	034000		JMS	SEND1
+02777	060000		LAC	MYREAL		; send my id
+03000	034000		JMS	SEND1
+03001	061337		LAC	[17776']		; restore ssv's buffer to full buffer
+03002	121274		DAC	@[25']
+03003	001161	LEAVE:	IOF			; turn off interupts
+03004	113005		JMP	@.+1		; now exit to ssv
+03005	000101		101'			; address of where to exit to
+		
+03006	074000	CHKNR:	SAM	MYBIT		; see if it is the guy we are sim.
+03007	010000		 JMP	EXIT		; if not then we are done
+03010	004001		LAW	1			; sent leaving message to 10 for him
+03011	034000		JMS	SEND1
+03012	060000		LAC	MYBIT
+03013	034000		JMS	SEND1
+03014	060000		LAC	MYREAL		; return to our real id
+03015	034000		JMS	GETD
+03016	034000		JMS	PRINT		; rebuild display
+03017	010000		JMP	EXIT
+		;
+		;	check for moved to new location message
+		;	if it is then do the folowing:
+		;	1)	indicate player active in info table
+		;	2)	update dir, x, and y in info table
+		;	3)	check visibility and set it correctly
+		;
+03020	000000	CHK2:
+03021	000000	IFN FAST,[
+03022	071302		SUB	[20']		; no chance of move if <20
+03023	002002		ASP			; skip if 0 or +
+03024	010000		 JMP CHK23		; negative, not a new protocol move.
+03025	071302		SUB [20']		; a move if 17< x <40
+03026	002002		ASP
+03027	010000		 JMP CHK22		;ah, if 20=< and <40, definitely new-ptcl move.
+03030	071300		SUB [100']		;	a move if ge 140
+03031	002002		ASP
+03032	010000		 JMP INSRTCH		; 40=< and <140, a char.
+03033	060000	CHK22:	LAC INCHAR
+03034	110000		JMP @[CHKI20]		;new ptcl move. go hack.
+03035	000000	CHK23:
+03036	000000	]	
+03037	060000		LAC INCHAR
+03040	075307		SAM	[2]		; is it type 2?
+03041	010000		 JMP	CHK3		; no but see if it is type 3
+03042	104004		LWC	4			; 4 more words to come
+03043	020000		DAC	ICNT
+03044	060000		LAC	[DTYP2]		; set up dispatch location
+03045	010000		JMP	SETOUT
+		
+03046	034000	DTYP2:	JMS	TESTID
+03047	020000		DAC	IID
+03050	037571		JMS	POSITION		; indicate player is active in info tables
+03051	160000		LAC	@ITEMP1		; get current status
+03052	002001		ASZ
+03053	002002		 ASP			; ignore message if he is exploding
+03054	013056		  JMP	.+2
+03055	010000		   JMP	EXIT
+03056	100003		STA
+03057	120000		DAC	@ITEMP1		; say player is active
+03060	030000		ISZ	ITEMP1
+03061	060000		LAC	ININFO+1		; save new direction
+03062	051300		IOR	[100']
+03063	045340		AND	[103']
+03064	074000		SAM	ININFO+1
+03065	034000		 JMS	ERROR		; direction greater than 3
+03066	045277		AND	[3]		; or not in 10n format
+03067	120000		DAC	@ITEMP1
+03070	030000		ISZ	ITEMP1
+03071	060000		LAC	ININFO+2		; save new x location
+03072	034000		JMS	TESTLOC		; make sure it is legal
+03073	120000		DAC	@ITEMP1
+03074	030000		ISZ	ITEMP1
+03075	060000		LAC	ININFO+3		; save new y location
+03076	034000		JMS	TESTLOC
+03077	120000		DAC	@ITEMP1
+		
+			;re-entry pt from higher 2k
+		
+03100	034000	CHK25:	JMS	GETCNT		; set up pointer to his display list slot
+03101	060000		LAC	[THING-7]
+03102	065310		ADD	[6]
+03103	030000		ISZ	ICNT2
+03104	013102		 JMP	.-2
+03105	020017		DAC	17'
+03106	034000		JMS	SEEUS		; can he be seen?
+03107	010000		 JMP	NOTVIS		; no
+03110	034000		JMS	FIGX		; yes, now figure dlxa
+03111	120017		DAC	@17'		; store it away
+03112	160000		LAC	@[DISTAN]		; now figure dsts 
+03113	003063		SAR	3
+03114	055277		XOR	[3]
+03115	050000		IOR	[DSTS 0]
+03116	120017		DAC	@17'
+03117	030017		ISZ	17'		; skip over wait
+03120	034000		JMS	FIGEYES		; next do eyes
+03121	120017		DAC	@17'		; store them
+03122	060000		LAC	IID		; last is name
+03123	064000		ADD	[TNUM-1]
+03124	020000		DAC	ITEMP1
+03125	160000		LAC	@ITEMP1
+03126	120017		DAC	@17'
+03127	010000		JMP	MCHK		; see if id is ours
+03130	060000	NOTVIS:	LAC	[DNOP]		; if not visible then make it so
+03131	030017		ISZ	17'		; skip dlxa
+03132	030017		ISZ	17'		; skip dsts
+03133	030017		ISZ	17'		; skip over wait
+03134	120017		DAC	@17'		; clear eyes
+03135	120017		DAC	@17'		; clear body (name)
+03136	060000	MCHK:	LAC	IID		; see if it is us
+03137	074000		SAM	MYBIT
+03140	010000		 JMP	EXIT		; no, done
+03141	034000		JMS	PRINT		; if so then update display
+03142	010000		JMP	EXIT		; done
+		
+		;
+		;	check for player shot message
+		;	if so then do the following:
+		;	1)	indicate in table that he is blowing up
+		;	2)	bump shooting players score
+		;	3)	generate explosion if visible
+		;	4)	if this imlac got hit then:
+		;		a)	set life flag to shot
+		;		b)	put name of who shot us in whodidit
+		;
+03143	075277	CHK3:	SAM	[3]		; type 3?
+03144	010000		 JMP	CHK4		; no, but try type 4
+03145	104002		LWC	2			; two words to wait for
+03146	020000		DAC	ICNT
+03147	060000		LAC	[DTYP3]		; set dispatch address
+03150	010000		JMP	SETOUT
+		
+03151	034000	DTYP3:	JMS	TESTID
+03152	060000		LAC	ININFO+1
+03153	102001		ASN
+03154	034000		 JMS	ERROR		; id zero
+03155	071264		SUB	[9.]
+03156	002002		ASP
+03157	013162		 JMP	.+3
+03160	065264		ADD	[9.]
+03161	034000		JMS	ERROR		; id greater than 8
+03162	065264		ADD	[9.]
+03163	020000		DAC	KILL		; save dying id for upscore
+03164	037571		JMS	POSITION		; indicate player is dying
+03165	100005		COA
+03166	120000		DAC	@ITEMP1
+03167	060000		LAC	ITEMP1
+03170	065315		ADD	[5]
+03171	020000		DAC	ITEMP1
+03172	065325		ADD	[4]
+03173	020000		DAC	ITEMP2
+03174	100011		CAL			;turn off any firing we have on him
+03175	120000		DAC	@ITEMP1
+03176	104074		LWC	60.		; set explosion to last 1 1/2 sec
+03177	120000		DAC	@ITEMP2
+03200	060000		LAC	ININFO+1		; see if i was shot
+03201	074000		SAM	MYBIT
+03202	010000		 JMP	NOTME
+03203	060000		LAC	ININFO
+03204	064000		ADD	[TNUM-1]		; say who did it in whodidit
+03205	020000		DAC	ITEMP2
+03206	160000		LAC	@ITEMP2
+03207	120672		DAC	@[WHODIDIT]
+03210	060000		LAC	ININFO		; wait longer in big 
+03211	020000		DAC	BIGEXP		; explosion if we are playing ourselves
+03212	074000		SAM	MYREAL		; so our new starting loc will be in effect
+03213	013216		 JMP	.+3
+03214	104170		LWC	120.
+03215	013217		JMP	.+2
+03216	104120		 LWC	80.
+03217	024000		XAM	BIGEXP
+03220	034000		JMS	UPSCORE		; update scores
+03221	010000		JMP	ENDER
+		
+03222	060000	NOTME:	LAC	ININFO+1		; now point into display list
+03223	100006		CIA
+03224	020000		DAC	ICNT2
+03225	060000		LAC	[THING-2]
+03226	065310		ADD	[6]
+03227	030000		ISZ	ICNT2
+03230	013226		 JMP	.-2
+03231	020000		DAC	ITEMP2
+03232	071261		SUB	[1]		; set pointer to eyes
+03233	020000		DAC	ITEMP1
+03234	160000		LAC	@ITEMP2		; is he currently visible?
+03235	074000		SAM	[DNOP]
+03236	010000		 JMP	VIS1		; yes
+03237	010000		JMP	NOEXPLO		; no
+		
+03240	060000	VIS1:	LAC	[DNOP]
+03241	120000		DAC	@ITEMP1		; yes, clear eyes
+03242	060000		LAC	JMSEXP		; stick in jms to explosion
+03243	120000		DAC	@ITEMP2
+03244	000000	NOEXPLO:LAC	ININFO		; bump scores
+03245	034000		JMS	UPSCORE		; and update scores in display list
+03246	010000		JMP	EXIT
+		
+		;
+		;	check to see if new name specified
+		;	if so then do the following:
+		;	1)	fill in approprate name display subroutine
+		;	2)	if mybit = 0 then assign the id to mybit
+		;
+03247	075325	CHK4:	SAM	[4]		; type 4?
+03250	010000		 JMP	ERASER		; no, keep looking
+03251	104013		LWC	11.		; 11. more characters to wait for
+03252	020000		DAC	ICNT
+03253	060000		LAC	[DTYP4]		; set dispatch address
+03254	010000		JMP	SETOUT
+		
+03255	034000	DTYP4:	JMS	TESTID
+03256	060000		LAC	MYBIT		; see if mybit is zero
+03257	002001		ASZ
+03260	010000		 JMP	GOTMINE
+03261	060000		LAC	ININFO		; yes, so set our id
+03262	020000		DAC	MYREAL
+03263	034000		JMS	GETD
+03264	120000	IFE FAST,	DAC	@[ORIG]		; indicate origional id in display
+03265	000000	GOTMINE:LAC	[ININFO]		; set up pointers for transfer
+03266	020016		DAC	16'
+03267	034000		JMS	GETCNT
+03270	060000		LAC	[IML1-8.]		; remember 1st char is offset char
+03271	065263		ADD	[8.]
+03272	030000		ISZ	ICNT2
+03273	013271		 JMP	.-2
+03274	020017		DAC	17'
+03275	020000		DAC	ITEMP2
+03276	100001		CLA
+03277	020000		DAC	SPACES
+03300	104006		LWC	6			; move 6 character name
+03301	020000		DAC	ICNT2
+03302	100016	CONVNXT:LAC	@16'
+03303	071305		SUB	[140']		; translate to lower case
+03304	102002		ASM
+03305	071272		 SUB	[40']
+03306	065305		ADD	[140']
+03307	075272		SAM	[40']		; space?
+03310	013312		 JMP	.+2		; no
+03311	030000		ISZ	SPACES		; yes	count them for offset char
+03312	034000		JMS	GETCHR		; convert to djms
+03313	120017		DAC	@17'
+03314	030000		ISZ	ICNT2
+03315	010000		 JMP	CONVNXT
+03316	060000		LAC	SPACES		; now fix offset character
+03317	064000		ADD	[CENTER]
+03320	020000		DAC	ITEMP1
+03321	160000		LAC	@ITEMP1
+03322	120000		DAC	@ITEMP2
+03323	060000		LAC	ININFO		; now store scores
+03324	037571		JMS	POSITION
+03325	065325		ADD	[4]
+03326	020000		DAC	ITEMP1
+03327	034000		JMS	FIXSCO		; do # of opponents shot
+03330	060000		LAC	ININFO
+03331	034000		JMS	POINTSC
+03332	034000		JMS	SCOREIT
+03333	060000		LAC	ITEMP1
+03334	065310		ADD	[6]
+03335	020000		DAC	ITEMP1
+03336	034000		JMS	FIXSCO		; now do # of times shot
+03337	060000		LAC	ININFO
+03340	034000		JMS	POINTSC
+03341	065315		ADD	[5]
+03342	020000		DAC	PTSCORE
+03343	034000		JMS	SCOREIT
+03344	010000		JMP	EXIT
+		
+03345	000000	FIXSCO:	0
+03346	160016		LAC	@16'
+03347	045320		AND	[77']
+03350	003043		SAL	3
+03351	003043		SAL	3
+03352	020000		DAC	ITEMP2
+03353	160016		LAC	@16'
+03354	045320		AND	[77']
+03355	050000		IOR	ITEMP2
+03356	120000		DAC	@ITEMP1
+03357	110000		JMP	@FIXSCO
+		
+03360	000000	SPACES:	0
+		
+		;
+		;	set up our id
+		;
+		;	enter with id in ac
+		;
+03361	000000	GETD:	0
+03362	020000		DAC	MYBIT
+03363	071261		SUB	[1]
+03364	020000		DAC	MYBIT1		; store normalized 0-7 id.
+03365	064000		ADD	[DSPTCH]
+03366	020000		DAC	ITEMP1
+03367	160000		LAC	@ITEMP1		; set up dstat, dx, dy, and dir ptrs
+03370	020000		DAC	DSTAT
+03371	100004		IAC
+03372	020000		DAC	DIR
+03373	100004		IAC
+03374	020000		DAC	DX
+03375	100004		IAC
+03376	020000		DAC	DY
+03377	000000	IFE FAST,[
+03400	060000		LAC	MYBIT		; now get our id in character
+03401	051341		IOR	[60']
+03402	034000		JMS	GETCHR
+03403	120000		DAC	@[CURENT]		; say our current id in display
+03404	000000	]
+03405	110000		JMP	@GETD
+		;
+		;
+		;	erase ring buffer?
+		;
+03406	075267	ERASER:	SAM	[14']		; type 4?
+03407	010000		 JMP	INSRTCH		; no, just insert into ring buffer
+03410	034000		JMS	ERASE
+03411	010000		JMP	EXIT
+		
+03412	000000	ERASE:	0
+03413	104004		LWC	4			; reset line count
+03414	020000		DAC	RINGLC
+03415	060000		LAC	[RINGST]		; reset both pointers
+03416	020000		DAC	RNGPT
+03417	100004		IAC
+03420	020000		DAC	RNGPT2
+03421	060000		LAC	[DJMS D012,]	; replace djmp to curser
+03422	120000		DAC	@RNGPT
+03423	060000		LAC	[DJMS CUR,]
+03424	120000		DAC	@RNGPT2
+03425	060000		LAC	[DJMP RINGST,]
+03426	120000		DAC	@[RING]
+03427	120000		DAC	@[RINGEND]
+03430	110000		JMP	@ERASE
+		
+		;
+		;	get djms for a character
+		;
+03431	000000	GETCHR:	0
+03432	045271		AND	[177']		; mask to 7 bits
+03433	075265		SAM	[12']		; line feed?
+03434	013437		 JMP	.+3
+03435	060000		LAC	[DJMS D012,]
+03436	010000		JMP	STORECH
+03437	075263		SAM	[10']		; back space?
+03440	013443		 JMP	.+3
+03441	060000		LAC	[DJMS D010,]
+03442	010000		JMP	STORECH
+03443	075270		SAM	[15']		; cr?
+03444	013447		 JMP	.+3
+03445	060000		LAC	[DJMS D015,]
+03446	010000		JMP	STORECH
+03447	071272		SUB	[40']		; don't allow anything below 40
+03450	002002		ASP
+03451	100001		CLA
+03452	065272		ADD	[40']
+03453	071305		SUB	[140']		; translate to lower case
+03454	102002		ASM
+03455	071272		 SUB	[40']
+		;XXX	ADD	[140'-40']
+03456	165331		ADD	@[24']		; convert to djms
+03457	020000		DAC	ITEMP1
+03460	160000		LAC	@ITEMP1
+03461	000000	STORECH:DAC	ITEMP1
+03462	110000		JMP	@GETCHR
+		;
+		;	insert character into ring buffer
+		;
+03463	000000	INSRTCH:JMS	FORWARD
+03464	060000		LAC	INCHAR
+03465	034000		JMS	GETCHR		; get djms for character
+03466	074000		SAM	[DJMS D012,]
+03467	010000		 JMP	NOTNL		; no
+03470	030000		ISZ	RINGLC		; yes, but is there room on screen?
+03471	010000		 JMP	NOTNL
+03472	034000		JMS	ROLL
+03473	010000		JMP	OK
+		
+03474	060000	NOTNL:	LAC	RNGPT2
+03475	074000		SAM	RNGPT		; have we filled entire buffer?
+03476	010000		 JMP	OK		; no
+03477	034000		JMS	ROLL		; yes, roll top line off
+03500	060000	OK:	LAC	[DJMP CUR,]
+03501	120000		DAC	@RNGPT2
+03502	034000		JMS	BACK		; back up pointer
+03503	060000		LAC	ITEMP1		; get djms again
+03504	120000		DAC	@RNGPT2		; stick in on top of old djmp cur
+03505	034000		JMS	FORWARD		; move pointer back up
+03506	060000		LAC	INCHAR
+03507	075270		SAM	[15']
+03510	010000		 JMP	EXIT		; done
+03511	004012		LAW	12'
+03512	020000		DAC	INCHAR
+03513	010000		JMP	INSRTCH
+		
+03514	000000	FORWARD:0			; roll rngpt2 forward one slot
+03515	060000		LAC	RNGPT2
+03516	100004		IAC
+03517	074000		SAM	[RINGEND]
+03520	013522		 JMP	.+2
+03521	060000		LAC	[RINGST]
+03522	020000		DAC	RNGPT2
+03523	110000		JMP	@FORWARD
+		
+03524	000000	BACK:	0
+03525	100003		STA
+03526	064000		ADD	RNGPT2
+03527	074000		SAM	[RING]
+03530	013532		JMP	.+2
+03531	060000		LAC	[RINGEND-1]
+03532	020000		DAC	RNGPT2
+03533	110000		JMP	@BACK
+		
+03534	000000	ROLL:	0			; roll ringpt forward one line
+03535	060000	LOOK:	LAC	RNGPT
+03536	100004		IAC
+03537	074000		SAM	[RINGEND]
+03540	013542		 JMP	.+2
+03541	060000		LAC	[RINGST]
+03542	074000		SAM	RNGPT2
+03543	013547		 JMP	.+4
+03544	034000		JMS	ERASE
+03545	034000		JMS	FORWARD
+03546	110000		 JMP	@ROLL
+03547	020000		DAC	RNGPT
+03550	160000		LAC	@RNGPT
+03551	074000		SAM	[DJMS D012,]
+03552	010000		 JMP	LOOK
+03553	060000	MOVED:	LAC	RNGPT
+03554	045334		AND	[7777']
+03555	051342		IOR	[160000']
+03556	120000		DAC	@[RING]
+03557	100003		STA
+03560	064000		ADD	RINGLC
+03561	020000		DAC	RINGLC
+03562	110000		JMP	@ROLL
+		
+		;
+		;	return from character read
+		;
+03563	110000	EXIT:	JMP	@CHARIN
+		
+03564	000000	GETCNT:	0
+03565	060000		LAC	ININFO		; get id of message originator
+03566	100006		CIA			; make it into a count
+03567	020000		DAC	ICNT2
+03570	110000		JMP	@GETCNT
+		
+03571	000000	POSITION:0
+03572	064000		ADD	[DSPTCH-1]	; point to correct status indicator
+03573	020000		DAC	ITEMP1
+03574	160000		LAC	@ITEMP1
+03575	020000		DAC	ITEMP1
+03576	020000		DAC	SEEPT		; also set seept for type 2 command
+03577	113571		JMP	@POSITION
+		
+03600	000000	TESTID:	0			; test for valid id in ininfo
+03601	060000		LAC	ININFO
+03602	102001		ASN			; also can't be zero
+03603	034000		 JMS	ERROR		; id zero or same as mybit
+03604	071264		SUB	[9.]		; can't be > or = to 9.
+03605	002002		ASP
+03606	010000		 JMP	TESTOK
+03607	060000		LAC	ININFO
+03610	034000		JMS	ERROR		; id greater than 8
+03611	060000	TESTOK:	LAC	ININFO		; all ok so return with id in ac
+03612	110000		JMP	@TESTID
+		
+03613	000000	TESTLOC:0			; test to see if legal location
+03614	045320		AND	[77']		; minimum is location 1
+03615	102001		ASN
+03616	034000		 JMS	ERROR		; location zero
+03617	071272		SUB	[32.]
+03620	002002		ASP
+03621	013624		 JMP	.+3
+03622	065272		ADD	[32.]
+03623	034000		JMS	ERROR		; location greater than 31.
+03624	065272		ADD	[32.]
+03625	110000		JMP	@TESTLOC
+		;
+		;	error handling routine
+		;
+03626	000000	ERROR:	0			; address of where the error was found
+03627	020000		DAC	ERRAC		; save ac error message
+03630	060000		LAC	IDSPTCH		; save dispatch address
+03631	020000		DAC	ERRDSP
+03632	104013		LWC	11.
+03633	020000		DAC	ICNT2		; now save info area
+03634	060000		LAC	[ININFO-1]
+03635	020017		DAC	17'
+03636	060000		LAC	[ERRINFO-1]
+03637	020016		DAC	16'
+03640	160017	SVELOP:	LAC	@17'
+03641	120016		DAC	@16'
+03642	030000		ISZ	ICNT2
+03643	010000		 JMP	SVELOP
+03644	030000		ISZ	ERRCNT		; bump the error count
+03645	100000		 NOP
+03646	060000		LAC	ERRCNT		; now display it
+03647	034000		JMS	GETCHR
+03650	120000		DAC	@[ERRCHAR]
+03651	010000		JMP	EXIT		; now ignore bad message
+		
+03652	000000	ERRAC:	0			; saved ac
+03653	000000	ERRDSP:	0			; saved dispatch address
+03654	000060	ERRCNT:	60'			; error count
+		
+		;
+		;	routines variables
+		;
+03655	000000	INCHAR:	0			; last character read in
+03656	000000	ICNT:	0			; the number of characters we are waiting for
+03657	000000	ICNT2:	0			; general purpose counter used in routine
+03660	000000	ITEMP1:	0			; temporary locations
+03661	000000	ITEMP2:	0			; another temporary location
+03662	000000	IDSPTCH:0			; dispatching address for command routines
+03663	000000	RNGPT:	RINGST			; first character of ring buffer pointer
+03664	000000	RNGPT2:	RINGST+1		; last character of ring buffer pointer
+03665	000004	RINGLC:	-4			; ring buffer line counter
+03666	000000	ININFO:	0			; input information from 10 buffer
+03667	000000		0
+03670	000000		0
+03671	000000		0
+03672	000000		0
+03673	000000		0
+03674	000000		0
+03675	000000		0
+03676	000000		0
+03677	000000		0
+03700	000000		0
+		;
+		;	constants go here at end of this 2k !!!!! any refs to or from
+		;	succeeding 2k must be indirect-address! bleah!!!!!! (klh)
+		;
+		
+			CONSTANTS
+		
+		;loc 14000		;happens about here anyway, just needs precision.
+		
+		;
+		;	distances to walls table
+		;
+03701	000777	WALLS:	511.			; distances to walls
+03702	000702		450.
+03703	000546		358.
+03704	000431		281.
+03705	000341		225.
+03706	000270		184.
+03707	000233		155.
+03710	000205		133.
+03711	000164		116.
+03712	000147		103.
+03713	000134		92.
+03714	000123		83.
+03715	000113		75.
+03716	000106		70.
+03717	000100		64.
+03720	000074		60.
+03721	000070		56.
+03722	000065		53.
+03723	000062		50.
+03724	000057		47.
+03725	000055		45.
+03726	000053		43.
+03727	000051		41.
+03730	000047		39.
+03731	000045		37.
+03732	000043		35.
+03733	000041		33.
+03734	000037		31.
+03735	000035		29.
+03736	000033		27.
+03737	000031		25.
+		;
+		;	error saving of info information area
+		;
+03740	000000	ERRINFO:0		; holds 2nd character of last bad message
+03741	000000		0		; holds the rest of the message
+03742	000000		0
+03743	000000		0
+03744	000000		0
+03745	000000		0
+03746	000000		0
+03747	000000		0
+03750	000000		0
+03751	000000		0
+03752	000000		0
+		;
+		;	n direction letter table
+		;	e
+		;	s
+		;	w
+		;
+03753	000116	DIRLET:	116'
+03754	000105		105'
+03755	000123		123'
+03756	000127		127'
+		;
+		;	you were shot by: message
+		;
+03757	000131	YWSB:	131'
+03760	000117		117'
+03761	000125		125'
+03762	000040		40'
+03763	000127		127'
+03764	000105		105'
+03765	000122		122'
+03766	000105		105'
+03767	000040		40'
+03770	000123		123'
+03771	000110		110'
+03772	000117		117'
+03773	000124		124'
+03774	000040		40'
+03775	000102		102'
+03776	000131		131'
+03777	000072		72'
+		;
+		;	eyes and arrows table
+		;
+04000	050000	EYTAB:	DJMS	AWAY
+04001	050000		DJMS	TOLEFT
+04002	050000		DJMS	EYES
+04003	050000		DJMS	TORIGHT
+		;
+		;	offset for name table
+		;
+04004	050000	CENTER:	DJMS	OFF6
+04005	050000		DJMS	OFF5
+04006	050000		DJMS	OFF4
+04007	050000		DJMS	OFF3
+04010	050000		DJMS	OFF2
+04011	050000		DJMS	OFF1
+04012	004000		DNOP
+		;XXXOFF6:	INC E,DM30
+		;XXX	INC DM30,100'
+		;XXXOFF5:	INC E,DM30
+		;XXX	INC DM20,100'
+		;XXXOFF4:	INC E,DM30
+		;XXX	INC DM30,100'
+		;XXXOFF3:	INC E,DM30
+		;XXX	INC DM20,100'
+		;XXXOFF2:	INC E,DM30
+		;XXX	INC DM30,100'
+		;XXXOFF1:	INC E,DM30
+		;XXX	INC DM20,140'
+		;
+		;	djmses to name labels routines
+		;
+04013	050000	TNUM:	DJMS	IML1
+04014	050000		DJMS	IML2
+04015	050000		DJMS	IML3
+04016	050000		DJMS	IML4
+04017	050000		DJMS	IML5
+04020	050000		DJMS	IML6
+04021	050000		DJMS	IML7
+04022	050000		DJMS	IML8
+		;
+		;	big explosion info table
+		;
+04023	000000	BIGX1INC:0
+04024	000000	BIGY1INC:0
+04025	000000	BIGX2INC:0
+04026	000000	BIGY2INC:0
+04027	000000	BIGX3INC:0
+04030	000000	BIGY3INC:0
+04031	000000	BIGX4INC:0
+04032	000000	BIGY4INC:0
+04033	000000	BIGX5INC:0
+04034	000000	BIGY5INC:0
+04035	000000	BIGX6INC:0
+04036	000000	BIGY6INC:0
+04037	000000	BIGX7INC:0
+04040	000000	BIGY7INC:0
+04041	000000	BIGX8INC:0
+04042	000000	BIGY8INC:0
+		;
+		;	imlac information tables
+		;
+04043	000000	DSPTCH:	IM1
+04044	000000		IM2
+04045	000000		IM3
+04046	000000		IM4
+04047	000000		IM5
+04050	000000		IM6
+04051	000000		IM7
+04052	000000		IM8
+		
+04053	000000	IM1:	0			; status word: -1 active, 1 dying, 0 not in game
+04054	000000		0			; direction
+04055	000000		0			; x location
+04056	000000		0			; y location
+04057	000000		0			; players score
+04060	000000		0			; bullet counter
+04061	000000		0			; my direction at time of fire
+04062	000000		0			; my x location at time of fire
+04063	000000		0			; my y location at time of fire
+04064	000000		0			; explosion timer
+04065	000000		0			; shot dead counter
+		
+		;XXXIM2:	REPEAT 11., 0
+		;XXXIM3:	REPEAT 11., 0
+		;XXXIM4:	REPEAT 11., 0
+		;XXXIM5:	REPEAT 11., 0
+		;XXXIM6:	REPEAT 11., 0
+		;XXXIM7:	REPEAT 11., 0
+		;XXXIM8:	REPEAT 11., 0
+		
+		;
+		;	test to see if player whose id is in iid is visible
+		;	seept should point to status word in info table
+		;	distan will contain distance to opponent on return if visible
+		;	skips if player seen
+		;
+04066	000000	SEE:	0
+04067	100001		CLA
+04070	020000		DAC	DISTAN
+04071	160000		LAC	@[SEEPT]		; set up local seept
+04072	020000		DAC	SEEPT2
+04073	030000		ISZ	SEEPT2		; point to direction
+04074	160000		LAC	@SEEPT2
+04075	020000		DAC	IDIR		; save direction in idir
+04076	030000		ISZ	SEEPT2		; point to x location
+04077	160000		LAC	@SEEPT2
+04100	020000		DAC	IX		; save it in ix
+04101	030000		ISZ	SEEPT2
+04102	160000		LAC	@SEEPT2		; now get y loc
+04103	020000		DAC	IY
+04104	060000		LAC	SAVEDIR		; see which way we are pointing
+04105	045261		AND	[1]
+04106	002001		ASZ
+04107	010000		 JMP	WEAST		; west or east
+04110	060000	SNORTH:	LAC	IX		; south or north	check his x to my x
+04111	074000		SAM	SAVEDX		; does it match?
+04112	110000		 JMP	@SEE		; no
+04113	060000		LAC	IY		; yes, now get the y difference
+04114	070000		SUB	SAVEDY
+04115	102001		ASN			; is he in my square?
+04116	110000		 JMP	@SEE		; yes, then i can't see him
+04117	020000		DAC	SEEPT2		; save distance to him
+04120	002002		ASP			; see if distance positive
+04121	010126		 JMP	HENORTH		; no, he must be north of me
+04122	100006		CIA			; yes, so he is south of me
+04123	020000		DAC	SEEPT2		; make distance negative
+04124	010000		JMP	HESOUTH
+		
+04125	004002	HEEAST:	LAW	2
+04126	005262	HENORTH=HEEAST
+04127	044000		AND	SAVEDIR		; see if i am looking north
+04130	002001		ASZ			; if not then i can't see him
+04131	110000		 JMP	@SEE		; i look south so i can't see him
+04132	010000		JMP	CHKLN		; ok so far, now check length of hall
+		
+04133	000002	HESOUTH:LAW	2
+04134	005262	HEWEST=HESOUTH
+04135	044000		AND	SAVEDIR		; see if i am looking south
+04136	102001		ASN			; if not then i can't see him
+04137	110000		 JMP	@SEE		; i no see him
+04140	010000		JMP	CHKLN		; so far so good, but check hallway length
+		
+04141	060000	WEAST:	LAC	IY		; check his y to my y
+04142	074000		SAM	SAVEDY		; it must match
+04143	110000		 JMP	@SEE		; can't see him
+04144	060000		LAC	IX		; now get the x difference
+04145	070000		SUB	SAVEDX
+04146	102001		ASN			; is he in my square?
+04147	110000		 JMP	@SEE		; yes, so i can't see him
+04150	020000		DAC	SEEPT2		; save the distance to him
+04151	002002		ASP			; but see if positive distance
+04152	010134		 JMP	HEWEST		; no, negative so he is west of me
+04153	100006		CIA
+04154	020000		DAC	SEEPT2
+04155	010000		JMP	HEEAST		; he is east of me
+		
+04156	060000	CHKLN:	LAC	SEEPT2
+04157	100006		CIA			; set distance to opponent
+04160	020000		DAC	DISTAN
+04161	004001	CHKLN1:	LAW	1
+04162	044000		AND	SAVEDIR
+04163	002001		ASZ
+04164	010000		 JMP	CHKLN3
+04165	034000		JMS	CREM2
+04166	064000		ADD	SAVEDY
+04167	020000		DAC	SAVEDY
+04170	060000	CHKLN2:	LAC	[MAZE]
+04171	064000		ADD	SAVEDY
+04172	020000		DAC	MPTR2
+04173	060000		LAC	SAVEDX
+04174	002001		ASZ
+04175	010000		 JMP	PT1
+04176	061314		LAC	[100000']
+04177	010000		JMP	PT2
+		
+04200	100006	PT1:	CIA
+04201	020000		DAC	MCNT
+04202	100010		CLL
+04203	061314		LAC	[100000']
+04204	003021		RAR	1
+04205	030000		ISZ	MCNT
+04206	010204		 JMP	.-2
+04207	020000	PT2:	DAC	BIT2
+04210	160000		LAC	@MPTR2
+04211	044000		AND	BIT2		; see if it is an open square
+04212	002001		ASZ
+04213	110000		 JMP	@SEE
+04214	030000		ISZ	SEEPT2		; are we as far as the opponent?
+04215	010000		 JMP	CHKLN1		; no
+04216	160000		LAC	@[IID]		; yes, see if he is me
+04217	174000		SAM	@[MYBIT]
+04220	030000		 ISZ	SEE		; don't skip if so (can't see me)
+04221	110000		  JMP	@SEE
+04222	034000	CHKLN3:	JMS	CREM2
+04223	100006		CIA
+04224	064000		ADD	SAVEDX
+04225	020000		DAC	SAVEDX
+04226	010000		JMP	CHKLN2
+		
+04227	000000	CREM2:	0
+04230	060000		LAC	SAVEDIR
+04231	003061		SAR	1
+04232	045261		AND	[1]
+04233	102001		ASN
+04234	060001		 LAC	[-1]
+04235	110000		JMP	@CREM2
+		
+04236	000000	DISTAN:	0
+04237	000000	SAVEDIR:0
+04240	000000	SAVEDX:	0
+04241	000000	SAVEDY:	0
+04242	000000	SEEPT2:	0
+04243	000000	MCNT:	0
+04244	000000	MPTR2:	0
+04245	000000	IY:	0					; object id y location
+04246	000000	IX:	0					; object id x location
+04247	000000	IDIR:	0			; object id imlac direction
+04250	000000	BIT2:	0
+		
+		; chki20 -- routine to handle new-protocol checking and munching,
+		; as well as old.
+		; put here since no room in lower 2k of core.	
+		
+04251	000000	IFN FAST,[
+		
+04252	045311	CHKI20:	AND [7]			;get normalized id, no need to test range!
+04253	100004		IAC			;make it 1-8.
+04254	120000		DAC @[IID]			;store for what wants it.
+04255	137571		JMS @[POSITION]		;set up itemp1 and seept pointers into info tabs
+04256	160000		LAC @[ITEMP1]
+04257	020000		DAC CTEMP1		;get itemp1 into a var within our 2k.
+04260	160000		LAC @CTEMP1		;get current status
+04261	002001		ASZ
+04262	002002		 ASP			;ignore this msg if he's exploding
+04263	010265		  JMP .+2
+04264	110000		   JMP @[EXIT]
+04265	100003		STA
+04266	120000		DAC @CTEMP1		;say player is active
+04267	060000		LAC CTEMP1
+04270	100004		IAC
+04271	020000		DAC PLRD		;save ptr to direction
+04272	100004		IAC
+04273	020000		DAC PLRX		;save ptr to x coord
+04274	100004		IAC
+04275	020000		DAC PLRY		;save ptr to y coord
+04276	020000		DAC CTEMP1
+04277	120000		DAC @[ITEMP1]
+					;itemp1 is now satisfactorily updated, and
+					;indices into position tables done, now do function.
+04300	160000		LAC @[INCHAR]
+04301	045343		AND [70']		;only interested in function digit
+04302	003063		SAR 3
+04303	064000		ADD [JMP PLRVEC]
+04304	020000		DAC PLRJMP
+		
+04305	000000	PLRJMP:	0
+		
+04306	010000	PLRVEC:	JMP BADVEC
+04307	010000		JMP BADVEC
+04310	010000		JMP PLRTRN		; 2 - right turn
+04311	010000		JMP PLLTRN		; 3 - left turn
+04312	010000		JMP PLFLIP		; 4 - turn around
+04313	010000		JMP PLMOVE		; 5 - move forward
+04314	010000		JMP PLBACK		; 6 - move backward
+04315	134000	BADVEC:	JMS @[ERROR]		; 7 - bad
+04316	110000		JMP @[EXIT]
+		
+04317	000000	PLRD:	0		;pointer to direction
+04320	000000	PLRX:	0		;pointer to x coord
+04321	000000	PLRY:	0		;guess what
+		
+04322	160000	PLRTRN:	LAC @PLRD	;get direction
+04323	100004		IAC		;right turn
+04324	045277		AND [3]
+04325	120000		DAC @PLRD
+04326	010000		JMP PLRDON
+		
+04327	160000	PLLTRN:	LAC @PLRD
+04330	071261		SUB [1]		;left turn
+04331	045277		AND [3]
+04332	120000		DAC @PLRD
+04333	010000		JMP PLRDON
+		
+04334	160000	PLFLIP:	LAC @PLRD
+04335	065307		ADD [2]		;turn right twice to turn-around
+04336	045277		AND [3]
+04337	120000		DAC @PLRD
+04340	010000		JMP PLRDON
+		
+04341	160000	PLBACK:	LAC @PLRD	;backward-- reverse direction then move.
+04342	065307		ADD [2]
+04343	010345		JMP .+2
+		
+04344	160000	PLMOVE:	LAC @PLRD
+04345	045277		AND [3]
+04346	064000		ADD [JMP PLDVEC]
+04347	020000		DAC PLMJMP
+		
+04350	000000	PLMJMP:	0
+		
+04351	010000	PLDVEC:	JMP PLMNOR	;north
+04352	010000		JMP PLMEA	;east
+04353	010000		JMP PLMSOU	;south
+04354	010000		JMP PLMWES	;west
+		
+04355	160000	PLMNOR:	LAC @PLRY
+04356	071261		SUB [1]		;decrement y coord for north moving
+04357	134000		JMS @[TESTLOC]
+04360	120000		DAC @PLRY
+04361	010000		JMP PLRDON
+		
+04362	160000	PLMEA:	LAC @PLRX
+04363	100004		IAC		;increment x coord for east
+04364	134000		JMS @[TESTLOC]
+04365	120000		DAC @PLRX
+04366	010000		JMP PLRDON
+		
+04367	160000	PLMSOU:	LAC @PLRY
+04370	100004		IAC		; incrment y coord for south
+04371	134000		JMS @[TESTLOC]
+04372	120000		DAC @PLRY
+04373	010000		JMP PLRDON
+		
+04374	160000	PLMWES:	LAC @PLRX
+04375	071261		SUB [1]		; decrement x coord for west
+04376	134000		JMS @[TESTLOC]
+04377	120000		DAC @PLRX
+04400	010000		JMP PLRDON
+		
+04401	160000	PLRDON:	LAC @[IID]	;get player id again
+04402	120000		DAC @[ININFO]	;and fake out stupid routine
+04403	110000		JMP @[CHK25]	;done with new ptcl handling.
+		
+04404	000000	CTEMP1:	0	;pointer substi. for itemp1
+04405	000000	] ;end of ifn fast
+		
+					; high 2k constants
+		;XXX	CONSTANTS
+		
+		;
+		;	name subroutines
+		;	5 character name
+		;
+04406	050000	IML1:	DJMS	D040
+04407	050000		DJMS	D040
+04410	050000		DJMS	D040
+04411	050000		DJMS	D040
+04412	050000		DJMS	D040
+04413	050000		DJMS	D040
+04414	050000		DJMS	D040
+04415	004040		DRJM			; return jump
+04416	050000	IML2:	DJMS	D040
+04417	050000		DJMS	D040
+04420	050000		DJMS	D040
+04421	050000		DJMS	D040
+04422	050000		DJMS	D040
+04423	050000		DJMS	D040
+04424	050000		DJMS	D040
+04425	004040		DRJM
+04426	050000	IML3:	DJMS	D040
+04427	050000		DJMS	D040
+04430	050000		DJMS	D040
+04431	050000		DJMS	D040
+04432	050000		DJMS	D040
+04433	050000		DJMS	D040
+04434	050000		DJMS	D040
+04435	004040		DRJM
+04436	050000	IML4:	DJMS	D040
+04437	050000		DJMS	D040
+04440	050000		DJMS	D040
+04441	050000		DJMS	D040
+04442	050000		DJMS	D040
+04443	050000		DJMS	D040
+04444	050000		DJMS	D040
+04445	004040		DRJM
+04446	050000	IML5:	DJMS	D040
+04447	050000		DJMS	D040
+04450	050000		DJMS	D040
+04451	050000		DJMS	D040
+04452	050000		DJMS	D040
+04453	050000		DJMS	D040
+04454	050000		DJMS	D040
+04455	004040		DRJM
+04456	050000	IML6:	DJMS	D040
+04457	050000		DJMS	D040
+04460	050000		DJMS	D040
+04461	050000		DJMS	D040
+04462	050000		DJMS	D040
+04463	050000		DJMS	D040
+04464	050000		DJMS	D040
+04465	004040		DRJM
+04466	050000	IML7:	DJMS	D040
+04467	050000		DJMS	D040
+04470	050000		DJMS	D040
+04471	050000		DJMS	D040
+04472	050000		DJMS	D040
+04473	050000		DJMS	D040
+04474	050000		DJMS	D040
+04475	004040		DRJM
+04476	050000	IML8:	DJMS	D040
+04477	050000		DJMS	D040
+04500	050000		DJMS	D040
+04501	050000		DJMS	D040
+04502	050000		DJMS	D040
+04503	050000		DJMS	D040
+04504	050000		DJMS	D040
+04505	004040		DRJM
+		
+		;
+		;	gsv character subroutines
+		;
+		;XXXCUR:	INC E,D0M1
+		;XXX	INC D0M3,B30
+04506	154330		INC B30,B30
+04507	101620		INC D03,D20
+		;XXX	INC D01,T
+04510	060000		DJMP DLIST
+04511	030200	WAIT:	INC E,P			; 40 microsecond wait
+04512	100200		INC P,P
+04513	100200		INC P,P
+04514	100200		INC P,P
+04515	100200		INC P,P
+04516	100200		INC P,P
+04517	100200		INC P,P
+04520	100200		INC P,P
+04521	100200		INC P,P
+04522	100140		INC P,140
+		;XXXD010:	INC E,DM30
+		;XXX	INC DM30,DM30
+		;XXX	INC DM20,140'
+		;XXXD012:	INC E,D0M3 		; end_of_line
+		;XXX	INC D0M3,D0M3
+		;XXX	INC D0M3,D0M3
+		;XXX	INC D0M3,D0M3
+		;XXX	INC X,X
+04523	010200	D015:	DLXA 200
+04524	050000		DJMS WAIT
+04525	004040		DRJM
+04526	010540	DNL3:	DLXA	540
+04527	060000		DJMP	DNL+1
+04530	011710	DNL2:	DLXA 1710
+04531	064533		DJMP .+2
+04532	010010	DNL:	DLXA 10
+04533	050000		DJMS WAIT
+04534	060000		DJMP D012
+04535	030230	D040:	INC E,D30 		; space
+04536	114230		INC D30,D30
+		;XXX	INC D20,X
+04537	030203	EYES:	INC E,D03		; eyes
+04540	101603		INC D03,D03
+		;XXX	INC D03,DM33
+04541	140300		INC B00,B00
+04542	114230		INC D30,D30
+04543	140300		INC B00,B00
+		;XXX	INC DM30,D00
+		;XXX	INC D0M3,D0M3
+		;XXX	INC D0M3,D0M3
+		;XXX	INC D0M3,140'
+04544	030303	CMZE:	INC E,B03
+04545	141703		INC B03,B03
+04546	141703		INC B03,B03
+04547	141702		INC B03,B02
+04550	154330		INC B30,B30
+04551	154310		INC B30,B10
+		;XXX	INC B0M3,B0M3
+		;XXX	INC B0M3,B0M3
+		;XXX	INC B0M3,B0M3
+		;XXX	INC B0M2,BM30
+		;XXX	INC BM30,BM30
+		;XXX	INC BM10,B12
+04552	145312		INC B12,B12
+04553	145312		INC B12,B12
+04554	145312		INC B12,B12
+04555	145312		INC B12,B12
+		;XXX	INC B12,DM30
+		;XXX	INC DM30,DM30
+		;XXX	INC DM10,B1M2
+		;XXX	INC B1M2,B1M2
+		;XXX	INC B1M2,B1M2
+		;XXX	INC B1M2,B1M2
+		;XXX	INC B1M2,B1M2
+		;XXX	INC B1M2,D10
+04556	060140		INC 140',140'
+04557	000000	CHARMZE:DJMS CMZE
+04560	060000		DJMP CMZE
+04561	030230	SPMAZE:	INC E,D30
+04562	114230		INC D30,D30
+04563	114230		INC D30,D30
+04564	114230		INC D30,D30
+04565	104140		INC D10,140'
+04566	050000	ARROWS:	DJMS UPARR
+04567	054572		DJMS RIGHTARR
+04570	050000		DJMS DOWNARR
+04571	050000		DJMS LEFTARR
+04572	000000	RIGHTARR:INC E,D33
+04573	101633		INC D03,D33
+04574	154330		INC B30,B30
+04575	154310		INC B30,B10
+		;XXX	INC BM2M2,B02
+		;XXX	INC B02,B2M2
+		;XXX	INC D3M3,D3M3
+		;XXX	INC D0M3,140'
+04576	000000	LEFTARR:INC E,D33
+04577	101633		INC D03,D33
+		;XXX	INC B22,B0M2
+		;XXX	INC B0M2,BM22
+04600	154330		INC B30,B30
+04601	154310		INC B30,B10
+		;XXX	INC D3M3,D3M3
+		;XXX	INC D0M3,140'
+		
+04602	030230	UPARR:	INC E,D30
+04603	114230		INC D30,D30
+04604	111703		INC D23,B03
+04605	141703		INC B03,B03
+		;XXX	INC B01,BM2M2
+04606	150320		INC B20,B20
+		;XXX	INC BM22,D00
+		;XXX	INC D3M3,D3M3
+		;XXX	INC D3M3,D2M3
+		;XXX	INC D0M1,140'
+		
+04607	000000	DOWNARR:INC E,D30
+04610	114230		INC D30,D30
+04611	111712		INC D23,B12
+		;XXX	INC BM20,B1M2
+04612	141703		INC B03,B03
+04613	141701		INC B03,B01
+		;XXX	INC D3M3,D3M3
+		;XXX	INC D3M3,D2M3
+		;XXX	INC D0M1,140'
+		
+04614	000000	AWAY:	DLV D,0,20.
+04615	000000		DLV B,0,15.
+04616	000000		DLV B,-2,-5.
+04617	000000		DLV B,4.,0
+04620	000000		DLV B,-2.,5.
+04621	000000		DLV D,0,-35.
+04622	004040		DRJM
+		
+04623	000000	TOLEFT:	DLV D,0,20.
+04624	000000		DLV B,-15.,0
+04625	000000		DLV B,5.,2
+04626	000000		DLV B,0,-4.
+04627	000000		DLV B,-5.,2
+04630	000000		DLV D,15.,-20.
+04631	004040		DRJM
+		
+04632	000000	TORIGHT:DLV D,0,20.
+04633	000000		DLV B,15.,0
+04634	000000		DLV B,-5.,2.
+04635	000000		DLV B,0,-4.
+04636	000000		DLV B,5.,2.
+04637	000000		DLV D,-15.,-20.
+04640	004040		DRJM
+		
+		;
+		;
+		;	big explosion display list
+		;
+04641	000002	AD2:	DHVS	2
+04642	000000		DADR			; turn on 8k display addressing
+04643	010500		DLXA	500
+04644	021200		DLYA	1200
+04645	050000		DJMS	WAIT
+		;
+		;	you were shot by:
+		;
+04646	050000	MESAGE:	DJMS	DNOP
+04647	050000		DJMS	DNOP
+04650	050000		DJMS	DNOP
+04651	050000		DJMS	DNOP
+04652	050000		DJMS	DNOP
+04653	050000		DJMS	DNOP
+04654	050000		DJMS	DNOP
+04655	050000		DJMS	DNOP
+04656	050000		DJMS	DNOP
+04657	050000		DJMS	DNOP
+04660	050000		DJMS	DNOP
+04661	050000		DJMS	DNOP
+04662	050000		DJMS	DNOP
+04663	050000		DJMS	DNOP
+04664	050000		DJMS	DNOP
+04665	050000		DJMS	DNOP
+04666	050000		DJMS	DNOP
+04667	011000		DLXA	1000
+04670	021000		DLYA	1000
+04671	050000		DJMS	WAIT
+		;
+		;	djms to player who did the killing
+		;
+04672	000000	WHODIDIT:DJMS	D040
+04673	004007		DSTS	3
+04674	011000	BIGX1:	DLXA	1000
+04675	021000	BIGY1:	DLYA	1000
+04676	050000		DJMS	WAIT
+04677	004000		DNOP
+04700	004000		DNOP
+04701	004000		DNOP
+04702	050000		DJMS	EXPLOSIN+2
+04703	011000	BIGX2:	DLXA	1000
+04704	021000	BIGY2:	DLYA	1000
+04705	050000		DJMS	WAIT
+04706	004000		DNOP
+04707	004000		DNOP
+04710	004000		DNOP
+04711	050000		DJMS	EXPLOSIN+2
+04712	011000	BIGX3:	DLXA	1000
+04713	021000	BIGY3:	DLYA	1000
+04714	050000		DJMS	WAIT
+04715	004000		DNOP
+04716	004000		DNOP
+04717	004000		DNOP
+04720	050000		DJMS	EXPLOSIN+2
+04721	011000	BIGX4:	DLXA	1000
+04722	021000	BIGY4:	DLYA	1000
+04723	050000		DJMS	WAIT
+04724	004000		DNOP
+04725	004000		DNOP
+04726	004000		DNOP
+04727	050000		DJMS	EXPLOSIN+2
+04730	011000	BIGX5:	DLXA	1000
+04731	021000	BIGY5:	DLYA	1000
+04732	050000		DJMS	WAIT
+04733	004000		DNOP
+04734	004000		DNOP
+04735	004000		DNOP
+04736	050000		DJMS	EXPLOSIN+2
+04737	011000	BIGX6:	DLXA	1000
+04740	021000	BIGY6:	DLYA	1000
+04741	050000		DJMS	WAIT
+04742	004000		DNOP
+04743	004000		DNOP
+04744	004000		DNOP
+04745	050000		DJMS	EXPLOSIN+2
+04746	011000	BIGX7:	DLXA	1000
+04747	021000	BIGY7:	DLYA	1000
+04750	050000		DJMS	WAIT
+04751	004000		DNOP
+04752	004000		DNOP
+04753	004000		DNOP
+04754	050000		DJMS	EXPLOSIN+2
+04755	011000	BIGX8:	DLXA	1000
+04756	021000	BIGY8:	DLYA	1000
+04757	050000		DJMS	WAIT
+04760	004000		DNOP
+04761	004000		DNOP
+04762	004000		DNOP
+04763	050000		DJMS	EXPLOSIN+2
+04764	000000		DHLT
+		
+		;
+		;	start of main display list
+		;
+04765	000001	AD1:	DHVS	1
+04766	000000		DADR			; turn on 8k display addressing
+						; (use 0 bit to indicate which 4k)
+04767	010050		DLXA	50
+04770	021300		DLYA	1300
+04771	050000		DJMS	WAIT
+04772	050000		DJMS	IML1
+04773	050000		DJMS	DNL
+04774	004000	SCORE:	DNOP			; display names and scores here
+04775	004000		DNOP
+04776	004000		DNOP
+04777	004000		DNOP
+05000	050000		DJMS	DNL
+05001	004000		DNOP
+05002	004000		DNOP
+05003	004000		DNOP
+05004	004000		DNOP
+05005	010050		DLXA	50
+05006	021100		DLYA	1100
+05007	050000		DJMS	WAIT
+05010	050000		DJMS	IML2
+05011	050000		DJMS	DNL
+05012	004000		DNOP
+05013	004000		DNOP
+05014	004000		DNOP
+05015	004000		DNOP
+05016	050000		DJMS	DNL
+05017	004000		DNOP
+05020	004000		DNOP
+05021	004000		DNOP
+05022	004000		DNOP
+05023	010050		DLXA	50
+05024	020700		DLYA	700
+05025	050000		DJMS	WAIT
+05026	050000		DJMS	IML3
+05027	050000		DJMS	DNL
+05030	004000		DNOP
+05031	004000		DNOP
+05032	004000		DNOP
+05033	004000		DNOP
+05034	050000		DJMS	DNL
+05035	004000		DNOP
+05036	004000		DNOP
+05037	004000		DNOP
+05040	004000		DNOP
+05041	010050		DLXA	50
+05042	020500		DLYA	500
+05043	050000		DJMS	WAIT
+05044	050000		DJMS	IML4
+05045	050000		DJMS	DNL
+05046	004000		DNOP
+05047	004000		DNOP
+05050	004000		DNOP
+05051	004000		DNOP
+05052	050000		DJMS	DNL
+05053	004000		DNOP
+05054	004000		DNOP
+05055	004000		DNOP
+05056	004000		DNOP
+05057	011724		DLXA	1724
+05060	021300		DLYA	1300
+05061	050000		DJMS	WAIT
+05062	050000		DJMS	IML5
+05063	050000		DJMS	DNL2
+05064	004000		DNOP
+05065	004000		DNOP
+05066	004000		DNOP
+05067	004000		DNOP
+05070	050000		DJMS	DNL2
+05071	004000		DNOP
+05072	004000		DNOP
+05073	004000		DNOP
+05074	004000		DNOP
+05075	011724		DLXA	1724
+05076	021100		DLYA	1100
+05077	050000		DJMS	WAIT
+05100	050000		DJMS	IML6
+05101	050000		DJMS	DNL2
+05102	004000		DNOP
+05103	004000		DNOP
+05104	004000		DNOP
+05105	004000		DNOP
+05106	050000		DJMS	DNL2
+05107	004000		DNOP
+05110	004000		DNOP
+05111	004000		DNOP
+05112	004000		DNOP
+05113	011724		DLXA	1724
+05114	020700		DLYA	700
+05115	050000		DJMS	WAIT
+05116	050000		DJMS	IML7
+05117	050000		DJMS	DNL2
+05120	004000		DNOP
+05121	004000		DNOP
+05122	004000		DNOP
+05123	004000		DNOP
+05124	050000		DJMS	DNL2
+05125	004000		DNOP
+05126	004000		DNOP
+05127	004000		DNOP
+05130	004000		DNOP
+05131	011724		DLXA	1724
+05132	020500		DLYA	500
+05133	050000		DJMS	WAIT
+05134	050000		DJMS	IML8
+05135	050000		DJMS	DNL2
+05136	004000		DNOP
+05137	004000		DNOP
+05140	004000		DNOP
+05141	004000		DNOP
+05142	050000		DJMS	DNL2
+05143	004000		DNOP
+05144	004000		DNOP
+05145	004000		DNOP
+05146	004000		DNOP
+05147	021720		DLYA	1720
+		;
+		;	status line
+		;
+05150	010060		DLXA	60
+05151	050000		DJMS	WAIT
+05152	000000	IFE FAST,[
+05153	050000	ORIG:	DJMS	D040	; origional id
+05154	050000		DJMS	D040
+05155	050000	CURENT:	DJMS	D040	; current id
+05156	050000		DJMS	D040
+05157	000000	]
+05160	050000	DEAD:	DJMS	D040	; status of player
+05161	050000		DJMS	D040
+05162	000000	ERRCHAR:DJMS	D040	; number of messages in error
+		;
+		;
+		;	n, s, e, or w letter
+		;
+05163	011000		DLXA	1000
+05164	050000		DJMS	WAIT
+05165	004007		DSTS	3
+05166	050000	LETTER:	DJMS	D040
+		;
+		;	this is where the 8 possible players appear
+		;
+		;	dlxa 1000
+		;	dlya <position>
+		;	dsts <scale>
+		;	djms wait
+		;	djms <eyes or dnop>
+		;	djms <name or dnop or explosion>
+		;
+05167	011000		DLXA	1000
+05170	050000	THING:	DJMS	D040
+05171	050000		DJMS	D040
+05172	050000		DJMS	WAIT
+05173	050000		DJMS	D040
+05174	050000		DJMS	D040
+05175	011000		DLXA	1000
+05176	050000		DJMS	D040
+05177	050000		DJMS	D040
+05200	050000		DJMS	WAIT
+05201	050000		DJMS	D040
+05202	050000		DJMS	D040
+05203	011000		DLXA	1000
+05204	050000		DJMS	D040
+05205	050000		DJMS	D040
+05206	050000		DJMS	WAIT
+05207	050000		DJMS	D040
+05210	050000		DJMS	D040
+05211	011000		DLXA	1000
+05212	050000		DJMS	D040
+05213	050000		DJMS	D040
+05214	050000		DJMS	WAIT
+05215	050000		DJMS	D040
+05216	050000		DJMS	D040
+05217	011000		DLXA	1000
+05220	050000		DJMS	D040
+05221	050000		DJMS	D040
+05222	050000		DJMS	WAIT
+05223	050000		DJMS	D040
+05224	050000		DJMS	D040
+05225	011000		DLXA	1000
+05226	050000		DJMS	D040
+05227	050000		DJMS	D040
+05230	050000		DJMS	WAIT
+05231	050000		DJMS	D040
+05232	050000		DJMS	D040
+05233	011000		DLXA	1000
+05234	050000		DJMS	D040
+05235	050000		DJMS	D040
+05236	050000		DJMS	WAIT
+05237	050000		DJMS	D040
+05240	050000		DJMS	D040
+05241	011000		DLXA	1000
+05242	050000		DJMS	D040
+05243	050000		DJMS	D040
+05244	050000		DJMS	WAIT
+05245	050000		DJMS	D040
+05246	050000		DJMS	D040
+		;
+		;	ring buffer
+		;
+05247	004005		DSTS	1
+05250	010200		DLXA	200
+05251	020130		DLYA	130
+05252	050000		DJMS	WAIT
+05253	060000	RING:	DJMP	RINGST
+05254	050000	RINGST:	DJMS	D012
+05255	060000		DJMP	CUR
+		
+05256	000240		BLOCK	160.
+		
+05257	000000	RINGEND:DJMP	RINGST
+		;
+		;	display list for maze starts here
+		;
+05260	000000	DLIST:	DHLT
+		;
+		;	return to console program after loading
+		;
+			END LOADER
+		
+		
+
+05261   000001  / 0
+05262   000000  / 1
+05263   000010  / 2
+05264   000011  / 3
+05265   000012  / 4
+05266   000013  / 5
+05267   000014  / 6
+05270   000015  / 7
+05271   000177  / 8
+05272   000040  / 9
+05273   007776  / 10
+05274   000025  / 11
+05275   000017  / 12
+05276   000037  / 13
+05277   000003  / 14
+05300   000100  / 15
+05301   174340  / 16
+05302   000020  / 17
+05303   000030  / 18
+05304   000150  / 19
+05305   000140  / 20
+05306   000160  / 21
+05307   000002  / 22
+05310   000006  / 23
+05311   000007  / 24
+05312   003260  / 25
+05313   002400  / 26
+05314   100000  / 27
+05315   000005  / 28
+05316   001777  / 29
+05317   030000  / 30
+05320   000077  / 31
+05321   140300  / 32
+05322   022044  / 33
+05323   003433  / 34
+05324   003436  / 35
+05325   000004  / 36
+05326   000016  / 37
+05327   001750  / 38
+05330   000144  / 39
+05331   000024  / 40
+05332   040000  / 41
+05333   020000  / 42
+05334   007777  / 43
+05335   010000  / 44
+05336   001000  / 45
+05337   017776  / 46
+05340   000103  / 47
+05341   000060  / 48
+05342   160000  / 49
+05343   000070  / 50
+
+Symbol Table:
+	FAST      000002
+	CHEAT     000003
+	DPTR      000005
+	VISPT     000006
+	VISPT2    000007
+	VISPT3    000010
+	VISPT4    000011
+	VISPT5    000012
+	MAZE:     000027
+	LOADER:   000060
+	DSTAT:    000077
+	DX:       000100
+	DY:       000101
+	DIR:      000102
+	NEXTBIT:  000103
+	ETEM:     000104
+	WPTR:     000105
+	WPTR2:    000106
+	CNT:      000107
+	CNT2:     000110
+	KILL:     000111
+	PTR4:     000112
+	PTR3:     000113
+	PTR2:     000114
+	PTR:      000115
+	XDELTA:   000116
+	YDELTA:   000117
+	BEAMBIT:  000120
+	LASTRIG:  000121
+	LASTLEF:  000122
+	HALLNGTH  000123
+	MYREAL:   000124
+	MYBIT:    000125
+	MYBIT1:   000126
+	IID:      000127
+	MPTR:     000130
+	BIT:      000131
+	KEY:      000132
+	KEYSET:   000133
+	KSCNT:    000134
+	HOME:     000135
+	BACKUP:   000136
+	RTURN:    000137
+	MOVE:     000140
+	LTURN:    000141
+	TURNA:    000142
+	PEEKR:    000143
+	FIRE:     000144
+	PEEKL:    000145
+	ERING:    000146
+	TOPVW:    000147
+	TEM1:     000150
+	TEM2:     000151
+	TEM3:     000152
+	TOPSW:    000153
+	RELCNT:   000155
+	START:    000157
+	SETUPN:   000176
+	RESTART:  000211
+	RESET1:   000212
+	RETN2:    000237
+	RETN4:    000241
+	RELMSG:   000255
+	ABSMSG:   000264
+	RETN:     000310
+	RETN3:    000312
+	REPT:     000321
+	KEYREPT:  000322
+	KSCHK:    000327
+	KSREPT:   000337
+	GOTIT:    000355
+	KEYCHK:   000360
+	KEY1:     000363
+	KEY2:     000375
+	KEY3:     000407
+	KEY4:     000420
+	PEEKER:   000433
+	KEY5:     000437
+	KEY6:     000451
+	KEY7:     000461
+	KEY7NP:   000474
+	ADIR2:    000476
+	KEY8:     000503
+	CHKNEXT:  000515
+	NOTHIM:   000520
+	BUMPTRS:  000522
+	NOTDNOP:  000533
+	FOUNONE:  000536
+	KEY9:     000554
+	VIEWTOP:  000560
+	VTWAIT:   000566
+	CHNGP:    000602
+	ZAP:      000632
+	SENDIT:   000641
+	SENDOK:   000656
+	HOLD:     000660
+	HOLD1:    000662
+	TSTKS:    000671
+	PNTBIT:   000702
+	PNT1:     000713
+	PNT2:     000722
+	MOV:      000724
+	MOVEWE:   000742
+	NOPER:    000750
+	MOVER:    000756
+	CREMENT:  000774
+	REFR:     001003
+	WHICHD:   001016
+	SYNC:     001017
+	BIGEXP:   001020
+	JMSEXP:   001021
+	EXP:      001022
+	INC1:     001025
+	INC2:     001026
+	INC3:     001027
+	EXPLOSIN  001031
+	INC4:     001040
+	INC5:     001044
+	INC6:     001045
+	DISP:     001050
+	BUMPPTS:  001065
+	UPDTSUB:  001103
+	UPDTBIG:  001115
+	UPDTLOOP  001125
+	CHKOPP:   001132
+	OPPBUMP:  001140
+	OPPLOOP:  001153
+	UPDATE:   001165
+	CHKBULL:  001216
+	DISP1:    001230
+	DISPNO:   001233
+	REPTCNT:  001270
+	CHKKS:    001271
+	DISP2:    001312
+	SEND1:    001370
+	RANDOM:   001401
+	RND:      001411
+	UPSCORE:  001412
+	CLRALL:   001420
+	POINTSC:  001471
+	SCOREIT:  001502
+	DOTENS:   001522
+	DOONES:   001530
+	DTENS:    001537
+	ZROSUP:   001543
+	DODIGIT:  001551
+	DACIT:    001555
+	SAVEID:   001560
+	PTSCORE:  001561
+	UPCNT:    001562
+	ONES:     001563
+	TENS:     001564
+	HUNDR:    001565
+	LV:       001566
+	LV1:      001621
+	LV2:      001632
+	PRINT:    001635
+	HEACT:    001643
+	INGAME:   001645
+	SETST:    001650
+	SETST2:   001651
+	TOPV:     001664
+	NXTW:     001703
+	NXTB:     001710
+	ME:       001721
+	ON:       001727
+	INSIDE:   001746
+	PRNT1:    001777
+	NOP2:     002007
+	NOP3:     002014
+	EW:       002034
+	PRNT2:    002042
+	NOP5:     002044
+	NOP4:     002065
+	LBIT:     002075
+	LB2:      002126
+	LB1:      002163
+	RBIT:     002223
+	RB2:      002251
+	RB1:      002306
+	FIX:      002345
+	ENDCHECK  002356
+	CLOSEOUT  002361
+	EN1:      002434
+	VISIBLE:  002440
+	VISLOOP:  002455
+	BLOWING:  002467
+	NOSEE:    002471
+	BUMP:     002477
+	PLAYING:  002501
+	SEEUS:    002512
+	SEEPT:    002526
+	FTEMP:    002527
+	FIGX:     002530
+	HEVIS:    002541
+	FIGEYES:  002560
+	SAR13:    002572
+	ENDER:    002603
+	BLOWLOOP  002613
+	CLRLOOP:  002637
+	CLRSUB:   002647
+	CHARIN:   002656
+	SETUP:    002675
+	CHK1:     002677
+	SETOUT:   002705
+	DTYP1:    002707
+	GONER:    002710
+	LEAVE:    003003
+	CHKNR:    003006
+	CHK2:     003020
+	CHK22:    003033
+	CHK23:    003035
+	DTYP2:    003046
+	CHK25:    003100
+	NOTVIS:   003130
+	MCHK:     003136
+	CHK3:     003143
+	DTYP3:    003151
+	NOTME:    003222
+	VIS1:     003240
+	NOEXPLO:  003244
+	CHK4:     003247
+	DTYP4:    003255
+	GOTMINE:  003265
+	CONVNXT:  003302
+	FIXSCO:   003345
+	SPACES:   003360
+	GETD:     003361
+	ERASER:   003406
+	ERASE:    003412
+	GETCHR:   003431
+	STORECH:  003461
+	INSRTCH:  003463
+	NOTNL:    003474
+	OK:       003500
+	FORWARD:  003514
+	BACK:     003524
+	ROLL:     003534
+	LOOK:     003535
+	MOVED:    003553
+	EXIT:     003563
+	GETCNT:   003564
+	POSITION  003571
+	TESTID:   003600
+	TESTOK:   003611
+	TESTLOC:  003613
+	ERROR:    003626
+	SVELOP:   003640
+	ERRAC:    003652
+	ERRDSP:   003653
+	ERRCNT:   003654
+	INCHAR:   003655
+	ICNT:     003656
+	ICNT2:    003657
+	ITEMP1:   003660
+	ITEMP2:   003661
+	IDSPTCH:  003662
+	RNGPT:    003663
+	RNGPT2:   003664
+	RINGLC:   003665
+	ININFO:   003666
+	WALLS:    003701
+	ERRINFO:  003740
+	DIRLET:   003753
+	YWSB:     003757
+	EYTAB:    004000
+	CENTER:   004004
+	TNUM:     004013
+	BIGX1INC  004023
+	BIGY1INC  004024
+	BIGX2INC  004025
+	BIGY2INC  004026
+	BIGX3INC  004027
+	BIGY3INC  004030
+	BIGX4INC  004031
+	BIGY4INC  004032
+	BIGX5INC  004033
+	BIGY5INC  004034
+	BIGX6INC  004035
+	BIGY6INC  004036
+	BIGX7INC  004037
+	BIGY7INC  004040
+	BIGX8INC  004041
+	BIGY8INC  004042
+	DSPTCH:   004043
+	IM1:      004053
+	SEE:      004066
+	SNORTH:   004110
+	HEEAST:   004125
+	HENORTH   004126
+	HESOUTH:  004133
+	HEWEST    004134
+	WEAST:    004141
+	CHKLN:    004156
+	CHKLN1:   004161
+	CHKLN2:   004170
+	PT1:      004200
+	PT2:      004207
+	CHKLN3:   004222
+	CREM2:    004227
+	DISTAN:   004236
+	SAVEDIR:  004237
+	SAVEDX:   004240
+	SAVEDY:   004241
+	SEEPT2:   004242
+	MCNT:     004243
+	MPTR2:    004244
+	IY:       004245
+	IX:       004246
+	IDIR:     004247
+	BIT2:     004250
+	CHKI20:   004252
+	PLRJMP:   004305
+	PLRVEC:   004306
+	BADVEC:   004315
+	PLRD:     004317
+	PLRX:     004320
+	PLRY:     004321
+	PLRTRN:   004322
+	PLLTRN:   004327
+	PLFLIP:   004334
+	PLBACK:   004341
+	PLMOVE:   004344
+	PLMJMP:   004350
+	PLDVEC:   004351
+	PLMNOR:   004355
+	PLMEA:    004362
+	PLMSOU:   004367
+	PLMWES:   004374
+	PLRDON:   004401
+	CTEMP1:   004404
+	IML1:     004406
+	IML2:     004416
+	IML3:     004426
+	IML4:     004436
+	IML5:     004446
+	IML6:     004456
+	IML7:     004466
+	IML8:     004476
+	WAIT:     004511
+	D015:     004523
+	DNL3:     004526
+	DNL2:     004530
+	DNL:      004532
+	D040:     004535
+	EYES:     004537
+	CMZE:     004544
+	CHARMZE:  004557
+	SPMAZE:   004561
+	ARROWS:   004566
+	RIGHTARR  004572
+	LEFTARR:  004576
+	UPARR:    004602
+	DOWNARR:  004607
+	AWAY:     004614
+	TOLEFT:   004623
+	TORIGHT:  004632
+	AD2:      004641
+	MESAGE:   004646
+	WHODIDIT  004672
+	BIGX1:    004674
+	BIGY1:    004675
+	BIGX2:    004703
+	BIGY2:    004704
+	BIGX3:    004712
+	BIGY3:    004713
+	BIGX4:    004721
+	BIGY4:    004722
+	BIGX5:    004730
+	BIGY5:    004731
+	BIGX6:    004737
+	BIGY6:    004740
+	BIGX7:    004746
+	BIGY7:    004747
+	BIGX8:    004755
+	BIGY8:    004756
+	AD1:      004765
+	SCORE:    004774
+	ORIG:     005153
+	CURENT:   005155
+	DEAD:     005160
+	ERRCHAR:  005162
+	LETTER:   005166
+	THING:    005170
+	RING:     005253
+	RINGST:   005254
+	RINGEND:  005257
+	DLIST:    005260
