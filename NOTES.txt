@@ -1,0 +1,28 @@
+# MazeWar.dev
+
+Notes and references about MazeWar, with the intent of creating a network-playable version using standard user-agents.
+
+
+## Schemes
+### User interactions:
+* In a browser with a connection over websockets.
+* Over SSH using a terminal that has line drawing capability (probably won't work for most users)
+
+### Serverside
+* Gonna be annoying, want to mimic origional mazewar.
+
+### Cheat Prevention
+* Probably not gonna. If the origional protocol allowed for sheannagans, this probably will too.
+
+
+## References
+
+### Implementations:
+
+Name		ServerSide	ClientSide	Notes
+Original	PDP-10 ASM	PDS-1 ASM	all asm, so porting will be harder. Would be the most interesting, though.
+UCB		C for SUN	C for SUN	For both VAX&SUN. Also has an ascii mode https://github.com/hackerb9/ucbmaze1984/tree/master/h
+
+
+### Other
+https://tmmeng.com/The-aMazing-History-of-Maze.pdf
