@@ -14,6 +14,33 @@ Notes and references about MazeWar, with the intent of creating a network-playab
 ### Cheat Prevention
 * Probably not gonna. If the origional protocol allowed for sheannagans, this probably will too.
 
+## Arch
+
+```
+User on Web -> WebClient(WASM?) -(websocket)     -> WSBridge
+                                                              > GameServer
+User on SSH w/ supported TERM -(ssh)> TermClient -> SSHBridge
+```
+
+Clients are per-user (both the in-broser one, and the SSH one)
+Since they are strongly exposed to the end-user, the *Bridge is in charge of protocol validation.
+
+The *Brridges are responsible for both sanatizing input from the *Clients, as well as translating/(de)encapsulating from the first.
+
+The *Bridges may be single-client, or may be multiclient, but extablish one game connection per client to the GameServer
+
+The GameServer handles the logic of distributing messages as per the origional mazewar protocol.
+At release, it will probably only have a single "lobby", but in the future, multiple lobbies and scematnics for selecting/creating/managing will be neeed, either as a protocol extention, or by making the protocol modal, and doing it before "true" client traffic.
+
+(this setup might be handled by the *Bridge)
+
+Why is the client untrusted:
+* The web clent runs on end-user eqipment, They might do all kinds of things to it.
+* The SSH client is most exposed to the user. It has the largest threat surface.
+
+It also makes fat clients easier to support. It would be really cool to be able to support a real PDS-1 client, even if it needs a on-net bridge to handle connecting to a *Bridge.
+
+
 
 ## References
 
@@ -22,6 +49,52 @@ Notes and references about MazeWar, with the intent of creating a network-playab
 Name		ServerSide	ClientSide	Notes
 Original	PDP-10 ASM	PDS-1 ASM	all asm, so porting will be harder. Would be the most interesting, though.
 UCB		C for SUN	C for SUN	For both VAX&SUN. Also has an ascii mode https://github.com/hackerb9/ucbmaze1984/tree/master/h
+
+### Protocol (origional)
+
+```
+ID = ID of player in game (1-8)
+
+Clientbound(?):
+0o001 -> Player departs 
+  ID
+0o002 -> Player movement (absolute)
+  ID
+  Direction | 0o100 (?)
+  X Position | 0o100 (?)
+  y Position | 0o100 (?)
+0o003 -> Player Death
+  ID of Shooter
+  ID of Victim
+0x004 -> Player Entry (Announcment)
+  ID
+  6 character display name
+  kills ("2 character numbrer")
+  deaths ("2 character number")
+0o014 -> Clear text area
+(all others) -> Display text
+  Text goes here
+```
+
+Extention: Relative movement (unsure if the ASM source in references/ supports this)
+
+```
+Single byte messages
+0xMMI
+I - id of player
+MM - Message
+	0o02 - Turn Right
+	0o03 - Turn Left
+	0o14 - Turn Around
+	0o15 - Step forward
+	0o16 - Step back
+	0x17 - RFU
+```
+
+Note: the maze itself is static, and all clients already know it.
+This means that the maze is not transmitted to anyone.
+
+
 
 
 ### Other
